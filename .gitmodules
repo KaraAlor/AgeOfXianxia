@@ -1,0 +1,24 @@
+[submodule "bgfx"]
+	path = bgfx
+	url = git://github.com/bkaradzic/bgfx.git
+[submodule "bimg"]
+	path = bimg
+	url = git://github.com/bkaradzic/bimg.git
+[submodule "bx"]
+	path = bx
+	url = git://github.com/bkaradzic/bx
+[submodule "SDL"]
+	path = SDL
+	url = https://github.com/libsdl-org/SDL.git
+[submodule "sdl"]
+	path = sdl
+	url = https://github.com/libsdl-org/SDL.git
+[submodule "diligent"]
+	path = diligent
+	url = https://github.com/DiligentGraphics/DiligentEngine.git
+[submodule "forge"]
+	path = forge
+	url = https://github.com/ConfettiFX/The-Forge.git
+[submodule "kha"]
+	path = kha
+	url = https://github.com/Kode/Kha

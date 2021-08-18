@@ -1,10 +1,10 @@
-# Object files
-*.o
-*/*.o
+# Build files
+build/*
+
+# Releases
+bin/*
 
 # Log files
 log.txt
 */log.txt
 
-# Releases
-bin/*
