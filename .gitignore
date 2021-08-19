@@ -8,3 +8,12 @@ bin/*
 log.txt
 */log.txt
 
+# Vs code artifacts
+.vscode/*
+
+# Blender Backups
+*.blend*
+!*.blend
+
+# Build artifacts
+build*

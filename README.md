@@ -3,14 +3,19 @@
 New game project for mix of xianxia and asatru lore.  Development is still very early and all features / design goals are subject to change.
 
 ## Prerequisites
-Releases come bundled with all the DLLs needed to execute the program.
+Releases come bundled with all the files needed to execute the program.
 
 ## Prerequisites (Building)
-This project is built inside a docker so all you need to run this is to create our docker image.
+This project is built inside a docker so all you need to build this is to create our docker image.
 Docker build config can be found [here.](https://raw.githubusercontent.com/Kyrasuum/Configs/main/dev_docker.txt)
 
+This project utilizes [Armory3d](https://github.com/armory3d/armory) which is build on [Kha](https://kha.tech/) (written in [haxe](https://haxe.org/)).
+Armory needs to therefore be installed in order to build this project.
+Follow tutorial [here.](https://github.com/armory3d/armory/wiki/setup)
+Armory builds using blender (should be installed via docker config) which means blender needs to have armory added as a plugin.
+
 ## Building
-There is a makefile within the root directory of the project, simple execute 'make' to build the project for your OS.
+Building is done via the armory release button in its toolbar.
 
 ## Design Goals
     * RPG mechanics
@@ -20,38 +25,8 @@ There is a makefile within the root directory of the project, simple execute 'ma
     * multiplayer
 as always, development is early so all goals are subject to changes.
 
-## Supported Operating Systems
-Currently we have release targets for:
-	* Linux
-	* Windows (32 and 64 bit)
-
-As of writing BGFX is capable of building for the following and therefore possible to build this project for aswell.
-    * android-arm-release
-    * android-arm64-release
-    * android-x86-release
-    * wasm2js-release
-    * wasm-release
-    * linux-release64
-    * freebsd-release32
-    * freebsd-release64
-    * mingw-gcc-release32
-    * mingw-gcc-release64
-    * mingw-clang-release32
-    * mingw-clang-release64
-    * vs2017-release32
-    * vs2017-release64
-    * vs2017-winstore100-release32
-    * vs2017-winstore100-release64
-    * osx-release
-    * osx-x64-release
-    * osx-arm64-release
-    * ios-arm-release
-    * ios-arm64-release
-    * ios-simulator-release
-    * ios-simulator64-release
-    * rpi-release
 ## Acknowledgements
-This project utilizes the BGFX rendering engine and therefore we also include any acknowledgements of theirs.
+We utilize Armory3d, Kha, and Haxe so leave credit where credit is due.
 
 ## Versioning
 Releases will be versioned and packed into a zip for convenience each release will be incremental in verison number.
