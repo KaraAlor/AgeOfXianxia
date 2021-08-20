@@ -5,15 +5,17 @@ build/*
 bin/*
 
 # Log files
-log.txt
-*/log.txt
+**/log.txt
 
 # Vs code artifacts
 .vscode/*
 
+# Sublime artifacts
+**/*sublime*
+
 # Blender Backups
-*.blend*
-!*.blend
+**/*.blend*
+!**/*.blend
 
 # Build artifacts
 build*
