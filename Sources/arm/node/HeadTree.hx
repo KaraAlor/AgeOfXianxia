@@ -26,7 +26,7 @@ package arm.node;
 		_SelfObject.preallocInputs(0);
 		_SelfObject.preallocOutputs(1);
 		armory.logicnode.LogicNode.addLink(_SelfObject, _PlayActionFrom, 0, 1);
-		armory.logicnode.LogicNode.addLink(new armory.logicnode.StringNode(this, "LookIdle"), _PlayActionFrom, 0, 2);
+		armory.logicnode.LogicNode.addLink(new armory.logicnode.StringNode(this, "RelaxedIdle"), _PlayActionFrom, 0, 2);
 		armory.logicnode.LogicNode.addLink(new armory.logicnode.IntegerNode(this, 0), _PlayActionFrom, 0, 3);
 		armory.logicnode.LogicNode.addLink(new armory.logicnode.FloatNode(this, 1.0), _PlayActionFrom, 0, 4);
 		armory.logicnode.LogicNode.addLink(new armory.logicnode.FloatNode(this, 1.0), _PlayActionFrom, 0, 5);

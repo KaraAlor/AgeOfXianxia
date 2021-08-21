@@ -1,32 +1,25 @@
 package arm;
 
-import iron.math.Quat;
-import iron.math.Mat4;
-import js.html.TableCaptionElement;
-import iron.data.Armature.TAction;
+import iron.object.Object;
 import iron.object.BoneAnimation;
 import Math;
 import iron.Scene;
 import iron.system.Input;
 import iron.math.Vec2;
 import iron.math.Vec4;
-import iron.math.Mat4;
-import iron.data.SceneFormat;
-import iron.data.Armature;
 
 class CameraController extends iron.Trait {
 	//Properties
-	@prop var HeadPitchOffset = 15;
     @prop var TPviewMin = 2.0;
     @prop var TPviewMax = 10.0;
     @prop var MouseHorizontalScale = 1/200;
     @prop var MouseVerticalScale = 1/200;
 
 	//Get our Player objects
-	var cameraParent = Scene.active.getEmpty("PlyHead");
+	var cameraParent = Scene.active.getEmpty("PlyCameraRoot");
 	var camera = Scene.active.getCamera("PlyCamera");
 	var playerRoot = Scene.active.getEmpty("PlyRoot");
-	var playerSkeleton:BoneAnimation;
+	var animation:BoneAnimation;
 
 	//Current camera parameters
 	var viewerDistance = 0.0;
@@ -38,7 +31,7 @@ class CameraController extends iron.Trait {
         super();
 
         viewerDistance = camera.transform.loc.x;
-		playerSkeleton = cameraParent.getParentArmature("PlyArmature");
+		animation = findAnimation(playerRoot.getChild("PlySkeleton"));
         notifyOnUpdate(update);
 
 		// notifyOnInit(function() {
@@ -72,18 +65,18 @@ class CameraController extends iron.Trait {
 
 		if (cameraParent != null){
 			if (mouse != null && mouse.down("right")){
-				if (playerSkeleton != null){
-					playerSkeleton.play("LookRight");
+				if (animation != null){
+					animation.play("Attack_1");
 				}
 			};
 			if (mouse != null && mouse.down("left")){
-				if (playerSkeleton != null){
-					playerSkeleton.play("LookLeft");
+				if (animation != null){
+					animation.play("Drop");
 				}
 			};
 		
 			if (keyboard != null && keyboard.down("alt")){
-				rotateView(new Vec2(-mouse.movementX, -mouse.movementY));
+				rotateView(new Vec2(-mouse.movementX, mouse.movementY));
 			};
 		
 			if (mouse != null && mouse.wheelDelta != 0){
@@ -91,6 +84,20 @@ class CameraController extends iron.Trait {
 			};
 		};
     }
+
+	function findAnimation(obj:Object):BoneAnimation{
+		if (obj.animation != null){
+			return cast obj.animation;
+		}
+		for (child in obj.children){
+			var childAnim = findAnimation(child);
+			if (childAnim != null){
+				return childAnim;
+			}
+		}
+
+		return null;
+	}
 
 	function zoomView(delta){
 		viewerDistance += delta;
@@ -105,7 +112,7 @@ class CameraController extends iron.Trait {
 		playerRoot.transform.buildMatrix();
 		viewerAltitude += angles.y * MouseVerticalScale;
 		
-		cameraParent.transform.setRotation(viewerAltitude - HeadPitchOffset, 0, 0);
+		cameraParent.transform.setRotation(viewerAltitude, 0, 0);
 		cameraParent.transform.buildMatrix();
 	}
 }
