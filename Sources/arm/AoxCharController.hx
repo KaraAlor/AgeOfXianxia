@@ -1,22 +1,29 @@
 package arm;
 
-import armory.trait.Character;
+
 import Math;
 import iron.Scene;
 import iron.Trait;
+
 import iron.math.Vec2;
 import iron.math.Vec3;
 import iron.math.Vec4;
 import iron.math.Mat4;
 import iron.math.Quat;
-import iron.system.Input;
+
 import iron.system.Time;
+import iron.system.Input;
 import iron.system.Audio;
+import iron.system.Storage;
+import arm.DataConfig;
+
 import iron.object.Object;
-import iron.data.SceneFormat;
 import iron.object.Transform;
 import iron.object.MeshObject;
 import iron.object.BoneAnimation;
+
+import iron.data.SceneFormat;
+import armory.trait.Character;
 import armory.trait.physics.PhysicsWorld;
 import armory.trait.internal.CameraController;
 import bullet.Bt.KinematicCharacterController;
@@ -38,6 +45,9 @@ class AoxCharController extends CameraController {
 	@prop var cameraParent: Object = null;
 	@prop var cameraObj: Object = null;
 
+	//Storage
+	static var data: DataConfig = Storage.data.config;
+
 	//Misc
 	var stepTime = 0.0;
 	var firingTime = 0.0;
@@ -49,12 +59,13 @@ class AoxCharController extends CameraController {
 	var viewerAzimuth = 0.0;
 	var viewerAltitude = 0.0;
 	var viewerRoll = 0.0;
+	var cameraMode = 0; // 0 - Third Person, 1 - Top Down, 2 - First Person
 
 	var dir = new Vec4();
 	var lastLook:Vec4;
 
 	//Animation Properties
-	var state = "idle";
+	var state = "idleGun";
 	var anim: BoneAnimation;
 
     public function new(){
@@ -64,12 +75,7 @@ class AoxCharController extends CameraController {
     }
 
 	function init(){
-		if (!body.ready || null == playerRoot) return;
-
-		PhysicsWorld.active.notifyOnPreUpdate(preUpdate);
-		notifyOnUpdate(update);
-		notifyOnLateUpdate(lateUpdate);
-		notifyOnRemove(removeFromWorld);
+		if (!body.ready || null == playerRoot || null == armature || null == cameraParent || null == camera) return;
 
 		iron.data.Data.getSound("step0.wav", function(sound:kha.Sound) {
 			soundStep0 = sound;
@@ -80,9 +86,16 @@ class AoxCharController extends CameraController {
 		});
 
 		anim = findAnimation(armature);
-		anim.notifyOnUpdate(updateBones);
+		if (null == anim || null == soundStep0 || null == soundStep1) return;
+		
 		lastLook = armature.transform.look().normalize();
         viewerDistance = cameraObj.transform.loc.x;
+
+		anim.notifyOnUpdate(updateBones);
+		PhysicsWorld.active.notifyOnPreUpdate(preUpdate);
+		notifyOnUpdate(update);
+		notifyOnLateUpdate(lateUpdate);
+		notifyOnRemove(removeFromWorld);
 	}
 
 	function preUpdate() {
@@ -90,23 +103,27 @@ class AoxCharController extends CameraController {
 		
 		var mouse = Input.getMouse();
 		var keyboard = Input.getKeyboard();
+		if (mouse == null || keyboard == null){
+			return;
+		}
 		
 		// locking mouse or unlocking
 		if (mouse.started() && !mouse.locked) mouse.lock();
-		else if (keyboard.started("alt") && mouse.locked) mouse.unlock();
+		else if (((data != null && keyboard.started(data.key_mouselook)) || 
+				(data == null && keyboard.started(DefaultLookKey))) && mouse.locked) mouse.unlock();
 
 		// moving camera
 		if (cameraParent != null){
-			if (mouse != null && mouse.down("right")){
+			if (mouse.down("right")){
 			};
-			if (mouse != null && mouse.down("left")){
+			if (mouse.down("left")){
 			};
 		
-			if (keyboard != null && mouse.locked && mouse.moved){
+			if (mouse.locked && mouse.moved){
 				rotateView(new Vec2(-mouse.movementX, -mouse.movementY));
 			};
 		
-			if (mouse != null && mouse.wheelDelta != 0){
+			if (mouse.wheelDelta != 0){
 				zoomView(mouse.wheelDelta);
 			};
 		};
@@ -117,9 +134,12 @@ class AoxCharController extends CameraController {
     function update(){
 		if (!body.ready) return;
 		//Get input devices
-		var mouse = Input.getMouse();
+		// var mouse = Input.getMouse();
 		var keyboard = Input.getKeyboard();
-		var gamepad = Input.getGamepad(0);
+		// var gamepad = Input.getGamepad(0);
+		if (keyboard == null){
+			return;
+		}
 
 		//gravity and friction
 		var grav = body.body.getGravity();
@@ -138,13 +158,14 @@ class AoxCharController extends CameraController {
 
 		//running
 		var speed = WalkSpeed;
-		if (keyboard.down("shift")) speed = RunSpeed;
+		if ((data != null && keyboard.started(data.key_run)) || 
+			(data == null && keyboard.started(DefaultRunKey))) speed = RunSpeed;
 
 		//movement animation
 		if (moveForward || moveBackward || moveLeft || moveRight) {
-			var action = moveForward  ? "run"  :
-						 moveBackward ? "back" :
-						 moveLeft     ? "left" : "right";
+			var action = moveForward  ? "runGun"  :
+						 moveBackward ? "backGun" :
+						 moveLeft     ? "leftGun" : "rightGun";
 			setState(action);
 			//normalize
 			dir = dir.normalize();
@@ -156,10 +177,12 @@ class AoxCharController extends CameraController {
 			stepTime += Time.delta;
 			if (stepTime > 0.38 / speed) {
 				stepTime = 0;
-				Audio.play(Std.random(2) == 0 ? soundStep0 : soundStep1);
+				if (null != soundStep0 && null != soundStep1){
+					Audio.play(Std.random(2) == 0 ? soundStep0 : soundStep1);
+				}
 			}
 		} else {
-			setState("idle", 2.0);
+			setState("idleGun", 2.0);
 			stepTime = 0;
 		}
 

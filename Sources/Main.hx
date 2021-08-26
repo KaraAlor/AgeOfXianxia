@@ -1,7 +1,7 @@
 // Auto-generated
 package ;
 class Main {
-    public static inline var projectName = 'main';
+    public static inline var projectName = 'AgeOfXianxia';
     public static inline var projectVersion = '1.0.0';
     public static inline var projectPackage = 'arm';
     public static function main() {
@@ -11,9 +11,9 @@ class Main {
         armory.system.Starter.main(
             'MainMenu',
             0,
-            false,
             true,
-            false,
+            true,
+            true,
             1920,
             1080,
             1,
