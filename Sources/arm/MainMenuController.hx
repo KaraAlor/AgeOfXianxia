@@ -34,7 +34,18 @@ class MainMenuController extends iron.Trait {
 
 		if (null == data){
 			data = new DataConfig();
+			Storage.save();
 		}
+		if (null == data.cam_fov)
+			data.cam_fov = DefaultFOV;
+		if (null == data.cam_viewdistance)
+			data.cam_viewdistance = DefaultViewDistance;
+		if (null == data.key_mouselook)
+			data.key_mouselook = DefaultLookKey;
+		if (null == data.key_run)
+			data.key_run = DefaultRunKey;
+		if (null == data.key_viewmode)
+			data.key_viewmode = DefaultViewModeKey;
 	}
 
 	function update() {

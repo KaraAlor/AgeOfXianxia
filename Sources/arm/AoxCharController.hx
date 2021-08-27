@@ -1,5 +1,7 @@
 package arm;
 
+import zui.*;
+import iron.App;
 
 import Math;
 import iron.Scene;
@@ -15,16 +17,21 @@ import iron.system.Time;
 import iron.system.Input;
 import iron.system.Audio;
 import iron.system.Storage;
+
 import arm.DataConfig;
+import iron.data.Data;
+import iron.data.SceneFormat;
 
 import iron.object.Object;
 import iron.object.Transform;
 import iron.object.MeshObject;
 import iron.object.BoneAnimation;
 
-import iron.data.SceneFormat;
+import armory.trait.NavAgent;
 import armory.trait.Character;
+import armory.trait.physics.RigidBody;
 import armory.trait.physics.PhysicsWorld;
+import armory.trait.navigation.Navigation;
 import armory.trait.internal.CameraController;
 import bullet.Bt.KinematicCharacterController;
 
@@ -34,23 +41,41 @@ class AoxCharController extends CameraController {
 	#else
 
 	//Properties
-    @prop var TPviewMin = 2.0;
-    @prop var TPviewMax = 10.0;
+	@prop var FPviewdist = -1.0;
+    @prop var TPviewMin = 0.0;
+    @prop var TPviewMax = 5.0;
+	@prop var TDviewMin = 10.0;
+	@prop var TDviewMax = 20.0;
+
     @prop var MouseHorizontalScale: Float = 0.005;
     @prop var MouseVerticalScale: Float = 0.005;
+
 	@prop var WalkSpeed: Float = 1.0;
 	@prop var RunSpeed: Float = 1.6;
+
 	@prop var playerRoot: Object = null;
 	@prop var armature: Object = null;
 	@prop var cameraParent: Object = null;
 	@prop var cameraObj: Object = null;
+	@prop var navObj: Object = null;
+
+	@prop var AimCursorScale: Float = 0.5;
+	@prop var AimCursorImgWidth: Int = 128;
 
 	//Storage
 	static var data: DataConfig = Storage.data.config;
 
+	//GUI
+    var ui:Zui;
+	var aimCursor: kha.Image;
+
 	//Misc
-	var stepTime = 0.0;
 	var firingTime = 0.0;
+	var agent: NavAgent;
+	var dir = new Vec4();
+
+	//Sound
+	var stepTime = 0.0;
 	var soundStep0:kha.Sound = null;
 	var soundStep1:kha.Sound = null;
 
@@ -58,11 +83,8 @@ class AoxCharController extends CameraController {
 	var viewerDistance = 0.0;
 	var viewerAzimuth = 0.0;
 	var viewerAltitude = 0.0;
-	var viewerRoll = 0.0;
-	var cameraMode = 0; // 0 - Third Person, 1 - Top Down, 2 - First Person
-
-	var dir = new Vec4();
-	var lastLook:Vec4;
+	var modelAzimuth = 0.0;
+	var cameraMode = 1; // 0 - First Person, 1 - Third Person, 2 - Top Down
 
 	//Animation Properties
 	var state = "idleGun";
@@ -71,24 +93,37 @@ class AoxCharController extends CameraController {
     public function new(){
         super();
         
-		notifyOnInit(init);
+        // Load font for UI labels
+        Data.getFont("font_default.ttf", function(f:kha.Font) {
+            ui = new Zui({font: f});
+            iron.Scene.active.notifyOnInit(init);
+        });
+
+		Data.getImage("aim.png", function(image: kha.Image) {
+			aimCursor = image;
+		}, true, "RGBA32");
     }
 
 	function init(){
-		if (!body.ready || null == playerRoot || null == armature || null == cameraParent || null == camera) return;
+		//ensure our parameters are setup
+		if (!body.ready || null == playerRoot || null == armature || null == cameraParent || null == camera || null == navObj) return;
 
-		iron.data.Data.getSound("step0.wav", function(sound:kha.Sound) {
+		Data.getSound("step0.wav", function(sound: kha.Sound) {
 			soundStep0 = sound;
 		});
 
-		iron.data.Data.getSound("step1.wav", function(sound:kha.Sound) {
+		Data.getSound("step1.wav", function(sound: kha.Sound) {
 			soundStep1 = sound;
 		});
 
 		anim = findAnimation(armature);
-		if (null == anim || null == soundStep0 || null == soundStep1) return;
+		agent = playerRoot.getTrait(NavAgent);
+		//last loading check
+		if (null == data) {
+			data = new DataConfig();
+		}
+		if (null == anim || null == agent || null == soundStep0 || null == soundStep1) return;
 		
-		lastLook = armature.transform.look().normalize();
         viewerDistance = cameraObj.transform.loc.x;
 
 		anim.notifyOnUpdate(updateBones);
@@ -96,6 +131,31 @@ class AoxCharController extends CameraController {
 		notifyOnUpdate(update);
 		notifyOnLateUpdate(lateUpdate);
 		notifyOnRemove(removeFromWorld);
+        notifyOnRender2D(render2D);
+	}
+
+	function render2D(g:kha.graphics2.Graphics) {
+		g.end();
+
+		var winW = App.framebuffer.width;
+		var winH = App.framebuffer.height;
+
+		var scale = (1920 / winW) * AimCursorScale;
+		var imgW = Std.int(AimCursorImgWidth * scale);
+		var imgX = Std.int(winW / 2 - imgW / 2);
+		var imgY = Std.int(winH / 2 - imgW / 2);
+
+        // Start with UI
+        ui.begin(g);
+			if (cameraMode != 2){
+				ui.beginRegion(g, imgX, imgY, imgW);
+				ui.setScale(scale);
+				ui.image(aimCursor, 0xffffffff);
+				ui.endRegion(true);
+			}
+        ui.end();
+
+        g.begin(false);
 	}
 
 	function preUpdate() {
@@ -108,26 +168,20 @@ class AoxCharController extends CameraController {
 		}
 		
 		// locking mouse or unlocking
-		if (mouse.started() && !mouse.locked) mouse.lock();
-		else if (((data != null && keyboard.started(data.key_mouselook)) || 
-				(data == null && keyboard.started(DefaultLookKey))) && mouse.locked) mouse.unlock();
-
-		// moving camera
-		if (cameraParent != null){
-			if (mouse.down("right")){
-			};
-			if (mouse.down("left")){
-			};
-		
+		if (keyPressed(keyboard, data.key_mouselook, DefaultLookKey) && !mouse.locked) {
+			mouse.lock();
+		} else if (keyPressed(keyboard, data.key_mouselook, DefaultLookKey) && mouse.locked) {
+			mouse.unlock();
+		} else {
+			// moving camera
 			if (mouse.locked && mouse.moved){
-				rotateView(new Vec2(-mouse.movementX, -mouse.movementY));
+				rotateView(new Vec2(-mouse.movementX * MouseHorizontalScale, -mouse.movementY * MouseVerticalScale));
 			};
 		
 			if (mouse.wheelDelta != 0){
 				zoomView(mouse.wheelDelta);
 			};
-		};
-
+		}
 		body.syncTransform();
 	}
 
@@ -137,9 +191,6 @@ class AoxCharController extends CameraController {
 		// var mouse = Input.getMouse();
 		var keyboard = Input.getKeyboard();
 		// var gamepad = Input.getGamepad(0);
-		if (keyboard == null){
-			return;
-		}
 
 		//gravity and friction
 		var grav = body.body.getGravity();
@@ -148,6 +199,27 @@ class AoxCharController extends CameraController {
 		var gravVel = vel.sub(vel.cross(grav4)).add(grav4);
 		body.setLinearVelocity(gravVel.x, gravVel.y, gravVel.z);
 
+		//view mode
+		if (keyPressed(keyboard, data.key_viewmode, DefaultViewModeKey)) {
+			cameraMode = (cameraMode + 1) % 3;
+
+			zoomView(0);
+			rotateView(new Vec2(0, 0));
+		}
+
+		if (cameraMode != 2) {
+			directControl();
+		} else {
+			navAgentControl();
+			setState("idleGun", 2.0);
+		}
+
+		//Keep vertical
+		body.setAngularFactor(0, 0, 0);
+    }
+
+	function directControl() {
+		var keyboard = Input.getKeyboard();
 		//movement
 		var look = armature.transform.look().normalize();
 		dir.set(0, 0, 0);
@@ -158,8 +230,7 @@ class AoxCharController extends CameraController {
 
 		//running
 		var speed = WalkSpeed;
-		if ((data != null && keyboard.started(data.key_run)) || 
-			(data == null && keyboard.started(DefaultRunKey))) speed = RunSpeed;
+		if (keyPressed(keyboard, data.key_run, DefaultRunKey)) speed = RunSpeed;
 
 		//movement animation
 		if (moveForward || moveBackward || moveLeft || moveRight) {
@@ -188,12 +259,26 @@ class AoxCharController extends CameraController {
 
 		if (state == "fire") firingTime += Time.delta;
 		else firingTime = 0.0;
+	}
 
-		//Keep vertical
-		body.setAngularFactor(0, 0, 0);
-		//rebuild camera and fix armature
-		lastLook.setFrom(look);
-    }
+	function navAgentControl() {
+		var mouse: Mouse = Input.getMouse();
+
+		if (mouse.down("left")){
+			var physics = PhysicsWorld.active;
+			var b = physics.pickClosest(mouse.x, mouse.y);
+			var rb = navObj.getTrait(RigidBody);
+
+			if (rb != null && b == rb) {
+				var from: Vec4 = playerRoot.transform.world.getLoc();
+				var to: Vec4 = physics.hitPointWorld;
+
+				Navigation.active.navMeshes[0].findPath(from, to, function(path: Array<Vec4>) {
+					agent.setPath(path);
+				});
+			}
+		}
+	}
 
 	function lateUpdate(){
 		if (!body.ready) return;
@@ -295,19 +380,36 @@ class AoxCharController extends CameraController {
 	}
 
 	function zoomView(delta){
-		viewerDistance += delta;
-		viewerDistance = Math.min(Math.max(viewerDistance, TPviewMin),TPviewMax);
-		cameraObj.transform.loc = new Vec4(0, 0, viewerDistance, 0);
+		if (cameraMode == 0) {
+			var newViewerDistance = FPviewdist;
+			delta = newViewerDistance - viewerDistance;
+			viewerDistance = newViewerDistance;
+		} else if (cameraMode == 1) {
+			var newViewerDistance = Math.min(Math.max(viewerDistance + delta, TPviewMin),TPviewMax);
+			delta = newViewerDistance - viewerDistance;
+			viewerDistance = newViewerDistance;
+		} else if (cameraMode == 2) {
+			var newViewerDistance = Math.min(Math.max(viewerDistance + delta, TDviewMin),TDviewMax);
+			delta = newViewerDistance - viewerDistance;
+			viewerDistance = newViewerDistance;
+		}
+		// cameraObj.transform.loc = new Vec4(0, -viewerDistance, 0, 0);
+		cameraObj.transform.translate(0, -delta, 0);
 		cameraObj.transform.buildMatrix();
 	}
 
 	function rotateView(angles: Vec2){
-		viewerAzimuth += angles.x * MouseHorizontalScale;
-		playerRoot.transform.setRotation(0, 0, viewerAzimuth);
-		playerRoot.transform.buildMatrix();
-		viewerAltitude += angles.y * MouseVerticalScale;
-		
-		cameraParent.transform.setRotation(viewerAltitude, viewerRoll, 0);
+		viewerAzimuth = (viewerAzimuth + angles.x) % 360;
+		viewerAltitude = (viewerAltitude + angles.y) % 360;
+
+		if (cameraMode != 2) {
+			modelAzimuth = viewerAzimuth;
+			playerRoot.transform.setRotation(0, 0, viewerAzimuth);
+			playerRoot.transform.buildMatrix();
+			cameraParent.transform.setRotation(viewerAltitude, 0, 0);
+		} else {
+			cameraParent.transform.setRotation(viewerAltitude, 0, 0);
+		}
 		cameraParent.transform.buildMatrix();
 	}
 
@@ -315,6 +417,15 @@ class AoxCharController extends CameraController {
 		if (animStr == state) return;
 		state = animStr;
 		anim.play(animStr, null, blend, speed);
+	}
+
+	function keyPressed(input: Keyboard, key: String, defkey: String) {
+		if (input == null) return false;
+		if (key == null || key == "") {
+			return input.started(defkey);
+		} else {
+			return input.started(key);
+		}
 	}
 	#end
 }

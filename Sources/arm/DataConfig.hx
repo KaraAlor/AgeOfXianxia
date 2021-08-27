@@ -6,6 +6,7 @@ import iron.system.Storage;
 //default settings
 var DefaultLookKey = "alt";
 var DefaultRunKey = "shift";
+var DefaultViewModeKey = "v";
 var DefaultFOV = 90;
 var DefaultViewDistance = 1000;
 
@@ -21,11 +22,13 @@ class DataConfig {
 	public var cam_viewdistance: Float;
 	public var key_mouselook: String;
 	public var key_run: String;
+	public var key_viewmode: String;
 	
 	public function new() {
 		cam_fov = DefaultFOV;
 		cam_viewdistance = DefaultViewDistance;
 		key_mouselook = DefaultLookKey;
 		key_run = DefaultRunKey;
+		key_viewmode = DefaultViewModeKey;
 	}
 }
