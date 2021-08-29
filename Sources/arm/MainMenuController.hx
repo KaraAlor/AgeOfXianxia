@@ -1,11 +1,16 @@
 package arm;
 
+import zui.Zui.Handle;
+import zui.Zui.Align;
 import zui.*;
 import iron.App;
 
 import arm.DataConfig;
 import armory.data.Config;
 import iron.system.Storage;
+
+import iron.system.Input;
+import kha.input.Keyboard;
 
 import iron.Scene;
 import kha.System;
@@ -17,6 +22,9 @@ class MainMenuController extends iron.Trait {
 	// UI
     var ui:Zui;
 	var state: Int = 0; // 0 - main menu, 1 - settings, 2 - graphics
+	var selectedHandle: Handle = null;
+	var selectedText: String = "";
+	var runHandle: Handle = Id.handle();
 	
 	public function new() {
 		super();
@@ -116,6 +124,31 @@ class MainMenuController extends iron.Trait {
 
 					ui.text("");
 
+					ui.row([2/3, 1/3]);
+					if (ui.button("Run Key")){
+						selectedHandle = runHandle;
+					}
+					if (selectedHandle == runHandle) {
+						ui.textInput(runHandle, selectedText, Align.Left, false);
+					} else {
+						ui.textInput(runHandle, data.key_run, Align.Left, false);
+					}
+
+					if (null != selectedHandle) {
+						var key = listenToKey();
+						if (null != key) {
+							switch (selectedHandle) {
+								case runHandle: {
+									data.key_run = key;
+									Storage.save();
+								}
+							}
+							selectedHandle = null;
+						}
+					}
+
+					ui.text("");
+
 					// Apply button
 					ui.row([1/3, 1/3, 1/3]);
 					if (ui.button("Apply")) {
@@ -185,6 +218,20 @@ class MainMenuController extends iron.Trait {
         ui.end();
 
         g.begin(false);
+	}
+
+	function listenToKey(): String {
+		if (ui.isKeyDown) {
+			selectedText = iron.system.Input.Keyboard.keyCode(ui.key);
+			ui.isTyping = false;
+
+			if (Keyboard.get() != null) Keyboard.get().hide();
+			return selectedText;
+		}
+		else {
+			selectedText = "Press a key...";
+			return null;
+		}
 	}
 
 	function getShadowQuality(i:Int):Int {

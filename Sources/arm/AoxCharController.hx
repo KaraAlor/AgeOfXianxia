@@ -14,6 +14,7 @@ import iron.math.Mat4;
 import iron.math.Quat;
 
 import iron.system.Time;
+import iron.system.Tween;
 import iron.system.Input;
 import iron.system.Audio;
 import iron.system.Storage;
@@ -27,7 +28,6 @@ import iron.object.Transform;
 import iron.object.MeshObject;
 import iron.object.BoneAnimation;
 
-import armory.trait.NavAgent;
 import armory.trait.Character;
 import armory.trait.physics.RigidBody;
 import armory.trait.physics.PhysicsWorld;
@@ -41,17 +41,18 @@ class AoxCharController extends CameraController {
 	#else
 
 	//Properties
-	@prop var FPviewdist = -1.0;
-    @prop var TPviewMin = 0.0;
+	@prop var FPviewdist = 0.0;
+    @prop var TPviewMin = 1.0;
     @prop var TPviewMax = 5.0;
-	@prop var TDviewMin = 10.0;
+	@prop var TDviewMin = 5.0;
 	@prop var TDviewMax = 20.0;
 
     @prop var MouseHorizontalScale: Float = 0.005;
     @prop var MouseVerticalScale: Float = 0.005;
 
-	@prop var WalkSpeed: Float = 1.0;
-	@prop var RunSpeed: Float = 1.6;
+	@prop var WalkSpeed: Float = 5.0;
+	@prop var RunSpeed: Float = 7.5;
+	@prop var turnDuration: Float = 0.4;
 
 	@prop var playerRoot: Object = null;
 	@prop var armature: Object = null;
@@ -71,9 +72,14 @@ class AoxCharController extends CameraController {
 
 	//Misc
 	var firingTime = 0.0;
-	var agent: NavAgent;
 	var dir = new Vec4();
 
+	//AI
+	var path: Array<Vec4> = null;
+	var index = 0;
+	var locAnim: TAnim = null;
+	var rotAnim: TAnim = null;
+	
 	//Sound
 	var stepTime = 0.0;
 	var soundStep0:kha.Sound = null;
@@ -106,7 +112,7 @@ class AoxCharController extends CameraController {
 
 	function init(){
 		//ensure our parameters are setup
-		if (!body.ready || null == playerRoot || null == armature || null == cameraParent || null == camera || null == navObj) return;
+		if (!body.ready || null == playerRoot || null == armature || null == cameraParent || null == navObj || null == cameraObj) return;
 
 		Data.getSound("step0.wav", function(sound: kha.Sound) {
 			soundStep0 = sound;
@@ -117,12 +123,11 @@ class AoxCharController extends CameraController {
 		});
 
 		anim = findAnimation(armature);
-		agent = playerRoot.getTrait(NavAgent);
 		//last loading check
 		if (null == data) {
 			data = new DataConfig();
 		}
-		if (null == anim || null == agent || null == soundStep0 || null == soundStep1) return;
+		if (null == anim) return;
 		
         viewerDistance = cameraObj.transform.loc.x;
 
@@ -170,6 +175,8 @@ class AoxCharController extends CameraController {
 		// locking mouse or unlocking
 		if (keyPressed(keyboard, data.key_mouselook, DefaultLookKey) && !mouse.locked) {
 			mouse.lock();
+			mouse.lastX = mouse.x;
+			mouse.lastY = mouse.y;
 		} else if (keyPressed(keyboard, data.key_mouselook, DefaultLookKey) && mouse.locked) {
 			mouse.unlock();
 		} else {
@@ -177,7 +184,6 @@ class AoxCharController extends CameraController {
 			if (mouse.locked && mouse.moved){
 				rotateView(new Vec2(-mouse.movementX * MouseHorizontalScale, -mouse.movementY * MouseVerticalScale));
 			};
-		
 			if (mouse.wheelDelta != 0){
 				zoomView(mouse.wheelDelta);
 			};
@@ -211,6 +217,7 @@ class AoxCharController extends CameraController {
 			directControl();
 		} else {
 			navAgentControl();
+			rotateView(new Vec2(0, 0));
 			setState("idleGun", 2.0);
 		}
 
@@ -241,7 +248,7 @@ class AoxCharController extends CameraController {
 			//normalize
 			dir = dir.normalize();
 			//speed
-			dir.mult(speed * 5);
+			dir.mult(speed);
 			body.activate();
 			body.setLinearVelocity(dir.x, dir.y, dir.z);
 			//step sounds
@@ -274,7 +281,7 @@ class AoxCharController extends CameraController {
 				var to: Vec4 = physics.hitPointWorld;
 
 				Navigation.active.navMeshes[0].findPath(from, to, function(path: Array<Vec4>) {
-					agent.setPath(path);
+					setPath(path);
 				});
 			}
 		}
@@ -381,35 +388,28 @@ class AoxCharController extends CameraController {
 
 	function zoomView(delta){
 		if (cameraMode == 0) {
-			var newViewerDistance = FPviewdist;
-			delta = newViewerDistance - viewerDistance;
-			viewerDistance = newViewerDistance;
+			viewerDistance = FPviewdist;
 		} else if (cameraMode == 1) {
-			var newViewerDistance = Math.min(Math.max(viewerDistance + delta, TPviewMin),TPviewMax);
-			delta = newViewerDistance - viewerDistance;
-			viewerDistance = newViewerDistance;
+			viewerDistance = Math.min(Math.max(viewerDistance + delta, TPviewMin),TPviewMax);
 		} else if (cameraMode == 2) {
-			var newViewerDistance = Math.min(Math.max(viewerDistance + delta, TDviewMin),TDviewMax);
-			delta = newViewerDistance - viewerDistance;
-			viewerDistance = newViewerDistance;
+			viewerDistance = Math.min(Math.max(viewerDistance + delta, TDviewMin),TDviewMax);
 		}
 		// cameraObj.transform.loc = new Vec4(0, -viewerDistance, 0, 0);
-		cameraObj.transform.translate(0, -delta, 0);
+		cameraObj.transform.translate(0, -viewerDistance - cameraObj.transform.loc.y, 0);
 		cameraObj.transform.buildMatrix();
 	}
 
 	function rotateView(angles: Vec2){
-		viewerAzimuth = (viewerAzimuth + angles.x) % 360;
-		viewerAltitude = (viewerAltitude + angles.y) % 360;
+		viewerAzimuth = (viewerAzimuth + angles.x) % (Math.PI * 2);
+		viewerAltitude = (viewerAltitude + angles.y) % (Math.PI * 2);
 
 		if (cameraMode != 2) {
 			modelAzimuth = viewerAzimuth;
-			playerRoot.transform.setRotation(0, 0, viewerAzimuth);
-			playerRoot.transform.buildMatrix();
-			cameraParent.transform.setRotation(viewerAltitude, 0, 0);
-		} else {
-			cameraParent.transform.setRotation(viewerAltitude, 0, 0);
 		}
+
+		playerRoot.transform.setRotation(0, 0, modelAzimuth);
+		playerRoot.transform.buildMatrix();
+		cameraParent.transform.setRotation(viewerAltitude, 0, (viewerAzimuth - modelAzimuth) % (Math.PI * 2));
 		cameraParent.transform.buildMatrix();
 	}
 
@@ -426,6 +426,40 @@ class AoxCharController extends CameraController {
 		} else {
 			return input.started(key);
 		}
+	}
+	
+	public function setPath(path: Array<Vec4>) {
+		stopTween();
+
+		this.path = path;
+		index = 1;
+
+		go();
+	}
+
+	function stopTween() {
+		if (locAnim != null) Tween.stop(locAnim);
+		if (rotAnim != null) Tween.stop(rotAnim);
+	}
+
+	function go() {
+		if (path == null || index >= path.length) return;
+
+		var p = path[index];
+		var dist = Vec4.distance(object.transform.loc, p);
+
+		var orient = new Vec4();
+		orient.subvecs(p, object.transform.loc).normalize;
+		var targetAngle = (Math.atan2(orient.y, orient.x) - Math.PI / 2);
+
+		if (targetAngle - modelAzimuth > Math.PI) targetAngle -= Math.PI * 2;
+
+		locAnim = Tween.to({ target: object.transform.loc, props: { x: p.x, y: p.y, z: p.z }, duration: dist / RunSpeed, done: function() {
+			index++;
+			if (index < path.length) go();
+		}});
+
+		rotAnim = Tween.to({ target: this, props: { modelAzimuth: targetAngle }, duration: turnDuration});
 	}
 	#end
 }
