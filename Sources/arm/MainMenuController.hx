@@ -9,12 +9,20 @@ import arm.DataConfig;
 import armory.data.Config;
 import iron.system.Storage;
 
-import iron.system.Input;
 import kha.input.Keyboard;
 
 import iron.Scene;
 import kha.System;
 import armory.renderpath.RenderPathCreator;
+
+@:enum
+abstract KeyInput(Int) {
+	var none = 0;
+	var runkey = 1;
+	var viewkey = 2;
+	var lookkey = 3;
+	var pausekey = 4;
+}
 
 class MainMenuController extends iron.Trait {
 	// Retrieve storage
@@ -22,9 +30,8 @@ class MainMenuController extends iron.Trait {
 	// UI
     var ui:Zui;
 	var state: Int = 0; // 0 - main menu, 1 - settings, 2 - graphics
-	var selectedHandle: Handle = null;
+	var selectedKeyInput: KeyInput = KeyInput.none;
 	var selectedText: String = "";
-	var runHandle: Handle = Id.handle();
 	
 	public function new() {
 		super();
@@ -39,21 +46,10 @@ class MainMenuController extends iron.Trait {
 	function init() {
         notifyOnRender2D(render2D);
         notifyOnUpdate(update);
-
 		if (null == data){
 			data = new DataConfig();
 			Storage.save();
 		}
-		if (null == data.cam_fov)
-			data.cam_fov = DefaultFOV;
-		if (null == data.cam_viewdistance)
-			data.cam_viewdistance = DefaultViewDistance;
-		if (null == data.key_mouselook)
-			data.key_mouselook = DefaultLookKey;
-		if (null == data.key_run)
-			data.key_run = DefaultRunKey;
-		if (null == data.key_viewmode)
-			data.key_viewmode = DefaultViewModeKey;
 	}
 
 	function update() {
@@ -125,25 +121,76 @@ class MainMenuController extends iron.Trait {
 					ui.text("");
 
 					ui.row([2/3, 1/3]);
-					if (ui.button("Run Key")){
-						selectedHandle = runHandle;
-					}
-					if (selectedHandle == runHandle) {
-						ui.textInput(runHandle, selectedText, Align.Left, false);
+					ui.text("Run Key");
+					if (selectedKeyInput == runkey) {
+						if (ui.button(selectedText)) {
+							selectedKeyInput = none;
+						}
 					} else {
-						ui.textInput(runHandle, data.key_run, Align.Left, false);
+						if (ui.button(data.key_run)) {
+							selectedKeyInput = runkey;
+						}
 					}
 
-					if (null != selectedHandle) {
+					ui.row([2/3, 1/3]);
+					ui.text("Mouse Look Key");
+					if (selectedKeyInput == lookkey) {
+						if (ui.button(selectedText)) {
+							selectedKeyInput = none;
+						}
+					} else {
+						if (ui.button(data.key_mouselook)) {
+							selectedKeyInput = lookkey;
+						}
+					}
+
+					ui.row([2/3, 1/3]);
+					ui.text("View Key");
+					if (selectedKeyInput == viewkey) {
+						if (ui.button(selectedText)) {
+							selectedKeyInput = none;
+						}
+					} else {
+						if (ui.button(data.key_viewmode)) {
+							selectedKeyInput = viewkey;
+						}
+					}
+
+					ui.row([2/3, 1/3]);
+					ui.text("Pause Menu Key");
+					if (selectedKeyInput == pausekey) {
+						if (ui.button(selectedText)) {
+							selectedKeyInput = none;
+						}
+					} else {
+						if (ui.button(data.key_pausemenu)) {
+							selectedKeyInput = pausekey;
+						}
+					}
+
+					if (none != selectedKeyInput) {
 						var key = listenToKey();
 						if (null != key) {
-							switch (selectedHandle) {
-								case runHandle: {
+							switch (selectedKeyInput) {
+								case none: {}
+								case runkey: {
 									data.key_run = key;
 									Storage.save();
 								}
+								case lookkey: {
+									data.key_mouselook = key;
+									Storage.save();
+								}
+								case viewkey: {
+									data.key_viewmode = key;
+									Storage.save();
+								}
+								case pausekey: {
+									data.key_pausemenu = key;
+									Storage.save();
+								}
 							}
-							selectedHandle = null;
+							selectedKeyInput = null;
 						}
 					}
 
@@ -192,9 +239,9 @@ class MainMenuController extends iron.Trait {
 					ui.text("");
 
 					// FOV
-					data.cam_fov = ui.slider(Id.handle({value: data.cam_fov}), "Camera FOV", MinimumFOV, MaximumFOV);
+					data.cam_fov = ui.slider(Id.handle({value: data.cam_fov}), "Camera FOV", arm.Global.MinimumFOV, arm.Global.MaximumFOV);
 					// View Distance
-					data.cam_viewdistance = ui.slider(Id.handle({value: data.cam_viewdistance}), "Camera View Distance", MinimumViewDistance, MaximumViewDistance);
+					data.cam_viewdistance = ui.slider(Id.handle({value: data.cam_viewdistance}), "Camera View Distance", arm.Global.MinimumViewDistance, arm.Global.MaximumViewDistance);
 
 					ui.text("");
 

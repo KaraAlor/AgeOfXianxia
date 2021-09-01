@@ -2,6 +2,7 @@ package arm;
 
 import zui.*;
 import iron.App;
+import kha.System;
 
 import Math;
 import iron.Scene;
@@ -69,6 +70,11 @@ class AoxCharController extends CameraController {
 	//GUI
     var ui:Zui;
 	var aimCursor: kha.Image;
+	var pauseMenu: Bool;
+	var chatMenu: Bool;
+	var characterMenu: Bool;
+	var inventoryMenu: Bool;
+	var skillsMenu: Bool;
 
 	//Misc
 	var firingTime = 0.0;
@@ -152,11 +158,47 @@ class AoxCharController extends CameraController {
 
         // Start with UI
         ui.begin(g);
-			if (cameraMode != 2){
+			if (cameraMode != 2 && canInteractWithGameWorld()){
 				ui.beginRegion(g, imgX, imgY, imgW);
 				ui.setScale(scale);
 				ui.image(aimCursor, 0xffffffff);
 				ui.endRegion(true);
+			}
+			if (pauseMenu) {
+				var panW = Std.int(winW / 2);
+				var panH = Std.int(winH / 2);
+				var panX = Std.int(winW / 4);
+				var panY = Std.int(winH / 4);
+				if (ui.window(Id.handle(), panX, panY, panW, panH, false)) {
+					ui.indent();
+					
+					ui.row([1/4, 1/2, 1/4]);
+					ui.text("");
+					if (ui.button("Return")) {
+						pauseMenu = false;
+					}
+					ui.text("");
+					
+					ui.text("");
+
+					ui.row([1/4, 1/2, 1/4]);
+					ui.text("");
+					if (ui.button("Back to Main Menu")) {
+						Scene.setActive("MainMenu");
+					}
+					ui.text("");
+
+					ui.text("");
+
+					ui.row([1/4, 1/2, 1/4]);
+					ui.text("");
+					if (ui.button("Quit to Desktop")) {
+						System.stop();
+					}
+					ui.text("");
+					
+					ui.unindent();
+				}
 			}
         ui.end();
 
@@ -172,21 +214,24 @@ class AoxCharController extends CameraController {
 			return;
 		}
 		
-		// locking mouse or unlocking
-		if (keyPressed(keyboard, data.key_mouselook, DefaultLookKey) && !mouse.locked) {
-			mouse.lock();
-			mouse.lastX = mouse.x;
-			mouse.lastY = mouse.y;
-		} else if (keyPressed(keyboard, data.key_mouselook, DefaultLookKey) && mouse.locked) {
-			mouse.unlock();
-		} else {
-			// moving camera
-			if (mouse.locked && mouse.moved){
-				rotateView(new Vec2(-mouse.movementX * MouseHorizontalScale, -mouse.movementY * MouseVerticalScale));
-			};
-			if (mouse.wheelDelta != 0){
-				zoomView(mouse.wheelDelta);
-			};
+		if (canInteractWithGameWorld()) {
+			// locking mouse or unlocking
+			if (keyPressed(keyboard, data.key_mouselook, arm.Global.DefaultLookKey) && !mouse.locked) {
+				mouse.reset();
+				mouse.lock();
+				mouse.hide();
+			} else if (keyPressed(keyboard, data.key_mouselook, arm.Global.DefaultLookKey) && mouse.locked) {
+				mouse.unlock();
+				mouse.show();
+			} else {
+				// moving camera
+				if (mouse.locked && mouse.moved){
+					rotateView(new Vec2(-mouse.movementX * MouseHorizontalScale, -mouse.movementY * MouseVerticalScale));
+				};
+				if (mouse.wheelDelta != 0){
+					zoomView(mouse.wheelDelta);
+				};
+			}
 		}
 		body.syncTransform();
 	}
@@ -205,20 +250,25 @@ class AoxCharController extends CameraController {
 		var gravVel = vel.sub(vel.cross(grav4)).add(grav4);
 		body.setLinearVelocity(gravVel.x, gravVel.y, gravVel.z);
 
-		//view mode
-		if (keyPressed(keyboard, data.key_viewmode, DefaultViewModeKey)) {
-			cameraMode = (cameraMode + 1) % 3;
+		if (canInteractWithGameWorld()) {
+			//view mode
+			if (keyPressed(keyboard, data.key_viewmode, arm.Global.DefaultViewModeKey)) {
+				cameraMode = (cameraMode + 1) % 3;
 
-			zoomView(0);
-			rotateView(new Vec2(0, 0));
-		}
+				zoomView(0);
+				rotateView(new Vec2(0, 0));
+			}
+			if (keyPressed(keyboard, data.key_pausemenu, arm.Global.DefaultPauseKey)) {
+				pauseMenu = true;
+			}
 
-		if (cameraMode != 2) {
-			directControl();
-		} else {
-			navAgentControl();
-			rotateView(new Vec2(0, 0));
-			setState("idleGun", 2.0);
+			if (cameraMode != 2) {
+				directControl();
+			} else {
+				navAgentControl();
+				rotateView(new Vec2(0, 0));
+				setState("idleGun", 2.0);
+			}
 		}
 
 		//Keep vertical
@@ -237,7 +287,7 @@ class AoxCharController extends CameraController {
 
 		//running
 		var speed = WalkSpeed;
-		if (keyPressed(keyboard, data.key_run, DefaultRunKey)) speed = RunSpeed;
+		if (keyPressed(keyboard, data.key_run, arm.Global.DefaultRunKey)) speed = RunSpeed;
 
 		//movement animation
 		if (moveForward || moveBackward || moveLeft || moveRight) {
@@ -460,6 +510,9 @@ class AoxCharController extends CameraController {
 		}});
 
 		rotAnim = Tween.to({ target: this, props: { modelAzimuth: targetAngle }, duration: turnDuration});
+	}
+	function canInteractWithGameWorld(): Bool {
+		return !pauseMenu;
 	}
 	#end
 }
