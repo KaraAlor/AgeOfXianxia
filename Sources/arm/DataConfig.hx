@@ -3,6 +3,15 @@ package arm;
 import bullet.Bt.DefaultCollisionConfiguration;
 import iron.system.Storage;
 
+@:enum
+abstract KeyInput(Int) {
+	var none = 0;
+	var runkey = 1;
+	var viewkey = 2;
+	var lookkey = 3;
+	var pausekey = 4;
+}
+
 class Global {
 	//default settings
 	public static var DefaultLookKey = "alt";
