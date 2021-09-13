@@ -1,0 +1,25 @@
+# Build files
+build/*
+
+# Releases
+bin/*
+
+# Log files
+**/log.txt
+
+# Vs code artifacts
+.vscode/*
+
+# Sublime artifacts
+**/*sublime*
+
+# Blender Backups
+**/*.blend*
+!**/*.blend
+
+# Build artifacts
+build*
+
+# Armory artifacts
+khafile.js
+Sources/Main.hx
