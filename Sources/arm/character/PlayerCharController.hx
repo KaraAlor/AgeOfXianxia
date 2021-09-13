@@ -1,5 +1,7 @@
 package arm.character;
 
+import arm.ui.AimCursorController;
+import arm.ui.PauseMenuController;
 import zui.*;
 import iron.App;
 import kha.System;
@@ -21,6 +23,7 @@ import iron.system.Audio;
 import iron.system.Storage;
 
 import arm.dataConfig.*;
+import armory.data.Config;
 import iron.data.Data;
 import iron.data.SceneFormat;
 
@@ -48,12 +51,10 @@ class PlayerCharController extends CameraController {
 	@prop var TDviewMin = 5.0;
 	@prop var TDviewMax = 20.0;
 
-    @prop var MouseHorizontalScale: Float = 0.005;
-    @prop var MouseVerticalScale: Float = 0.005;
-
 	@prop var WalkSpeed: Float = 5.0;
 	@prop var RunSpeed: Float = 7.5;
 	@prop var turnDuration: Float = 0.4;
+	@prop var StepDelay: Float = 1.5;
 
 	@prop var playerRoot: Object = null;
 	@prop var armature: Object = null;
@@ -61,20 +62,16 @@ class PlayerCharController extends CameraController {
 	@prop var cameraObj: Object = null;
 	@prop var navObj: Object = null;
 
-	@prop var AimCursorScale: Float = 0.5;
-	@prop var AimCursorImgWidth: Int = 128;
-
 	//Storage
 	static var data: DataConfig = Storage.data.config;
 
 	//GUI
-    var ui:Zui;
-	var aimCursor: kha.Image;
-	var pauseMenu: Bool;
-	var chatMenu: Bool;
-	var characterMenu: Bool;
-	var inventoryMenu: Bool;
-	var skillsMenu: Bool;
+	var aimCursor: AimCursorController = new AimCursorController();
+	var pauseMenu: PauseMenuController = new PauseMenuController();
+	var chatMenu: Bool = true;
+	var characterMenu: Bool = false;
+	var inventoryMenu: Bool = false;
+	var skillsMenu: Bool = false;
 
 	//Misc
 	var firingTime = 0.0;
@@ -105,15 +102,7 @@ class PlayerCharController extends CameraController {
     public function new(){
         super();
         
-        // Load font for UI labels
-        Data.getFont("font_default.ttf", function(f:kha.Font) {
-            ui = new Zui({font: f});
-            iron.Scene.active.notifyOnInit(init);
-        });
-
-		Data.getImage("aim.png", function(image: kha.Image) {
-			aimCursor = image;
-		}, true, "RGBA32");
+		iron.Scene.active.notifyOnInit(init);
     }
 
 	function init(){
@@ -142,67 +131,7 @@ class PlayerCharController extends CameraController {
 		notifyOnUpdate(update);
 		notifyOnLateUpdate(lateUpdate);
 		notifyOnRemove(removeFromWorld);
-        notifyOnRender2D(render2D);
-	}
-
-	function render2D(g:kha.graphics2.Graphics) {
-		g.end();
-
-		var winW = App.framebuffer.width;
-		var winH = App.framebuffer.height;
-
-		var scale = (1920 / winW) * AimCursorScale;
-		var imgW = Std.int(AimCursorImgWidth * scale);
-		var imgX = Std.int(winW / 2 - imgW / 2);
-		var imgY = Std.int(winH / 2 - imgW / 2);
-
-        // Start with UI
-        ui.begin(g);
-			if (cameraMode != 2 && canInteractWithGameWorld()){
-				ui.beginRegion(g, imgX, imgY, imgW);
-				ui.setScale(scale);
-				ui.image(aimCursor, 0xffffffff);
-				ui.endRegion(true);
-			}
-			if (pauseMenu) {
-				var panW = Std.int(winW / 2);
-				var panH = Std.int(winH / 2);
-				var panX = Std.int(winW / 4);
-				var panY = Std.int(winH / 4);
-				if (ui.window(Id.handle(), panX, panY, panW, panH, false)) {
-					ui.indent();
-					
-					ui.row([1/4, 1/2, 1/4]);
-					ui.text("");
-					if (ui.button("Return")) {
-						pauseMenu = false;
-					}
-					ui.text("");
-					
-					ui.text("");
-
-					ui.row([1/4, 1/2, 1/4]);
-					ui.text("");
-					if (ui.button("Back to Main Menu")) {
-						Scene.setActive("MainMenu");
-					}
-					ui.text("");
-
-					ui.text("");
-
-					ui.row([1/4, 1/2, 1/4]);
-					ui.text("");
-					if (ui.button("Quit to Desktop")) {
-						System.stop();
-					}
-					ui.text("");
-					
-					ui.unindent();
-				}
-			}
-        ui.end();
-
-        g.begin(false);
+		pauseMenu.visible = false;
 	}
 
 	function preUpdate() {
@@ -216,17 +145,19 @@ class PlayerCharController extends CameraController {
 		
 		if (canInteractWithGameWorld()) {
 			// locking mouse or unlocking
-			if (keyPressed(keyboard, data.key_mouselook, DataConfig.Global.DefaultLookKey) && !mouse.locked) {
-				mouse.reset();
-				mouse.lock();
-				mouse.hide();
-			} else if (keyPressed(keyboard, data.key_mouselook, DataConfig.Global.DefaultLookKey) && mouse.locked) {
-				mouse.unlock();
-				mouse.show();
+			if (data.keyPressed(DataConfig.KeyInput.lookkey)){
+				if (!mouse.locked) {
+					mouse.reset();
+					mouse.lock();
+					mouse.hide();
+				} else {
+					mouse.unlock();
+					mouse.show();
+				}
 			} else {
 				// moving camera
 				if (mouse.locked && mouse.moved){
-					rotateView(new Vec2(-mouse.movementX * MouseHorizontalScale, -mouse.movementY * MouseVerticalScale));
+					rotateView(new Vec2(-mouse.movementX * data.MouseHorizontalScale, -mouse.movementY * data.MouseVerticalScale));
 				};
 				if (mouse.wheelDelta != 0){
 					zoomView(mouse.wheelDelta);
@@ -239,7 +170,7 @@ class PlayerCharController extends CameraController {
     function update(){
 		if (!body.ready) return;
 		//Get input devices
-		// var mouse = Input.getMouse();
+		var mouse = Input.getMouse();
 		var keyboard = Input.getKeyboard();
 		// var gamepad = Input.getGamepad(0);
 
@@ -252,14 +183,16 @@ class PlayerCharController extends CameraController {
 
 		if (canInteractWithGameWorld()) {
 			//view mode
-			if (keyPressed(keyboard, data.key_viewmode, DataConfig.Global.DefaultViewModeKey)) {
+			if (data.keyPressed(DataConfig.KeyInput.viewkey)) {
 				cameraMode = (cameraMode + 1) % 3;
 
 				zoomView(0);
 				rotateView(new Vec2(0, 0));
 			}
-			if (keyPressed(keyboard, data.key_pausemenu, DataConfig.Global.DefaultPauseKey)) {
-				pauseMenu = true;
+			if (data.keyPressed(DataConfig.KeyInput.pausekey)) {
+				pauseMenu.visible = true;
+				aimCursor.visible = false;
+				mouse.unlock();
 			}
 
 			if (cameraMode != 2) {
@@ -268,6 +201,11 @@ class PlayerCharController extends CameraController {
 				navAgentControl();
 				rotateView(new Vec2(0, 0));
 				setState("idleGun", 2.0);
+			}
+		} else {
+			if (data.keyPressed(DataConfig.KeyInput.pausekey)) {
+				pauseMenu.visible = false;
+				aimCursor.visible = true;
 			}
 		}
 
@@ -287,7 +225,7 @@ class PlayerCharController extends CameraController {
 
 		//running
 		var speed = WalkSpeed;
-		if (keyPressed(keyboard, data.key_run, DataConfig.Global.DefaultRunKey)) speed = RunSpeed;
+		if (data.keyDown(DataConfig.KeyInput.runkey)) speed = RunSpeed;
 
 		//movement animation
 		if (moveForward || moveBackward || moveLeft || moveRight) {
@@ -299,11 +237,13 @@ class PlayerCharController extends CameraController {
 			dir = dir.normalize();
 			//speed
 			dir.mult(speed);
+			dir.add(body.getLinearVelocity());
+			
 			body.activate();
 			body.setLinearVelocity(dir.x, dir.y, dir.z);
 			//step sounds
 			stepTime += Time.delta;
-			if (stepTime > 0.38 / speed) {
+			if (stepTime > StepDelay / speed) {
 				stepTime = 0;
 				if (null != soundStep0 && null != soundStep1){
 					Audio.play(Std.random(2) == 0 ? soundStep0 : soundStep1);
@@ -469,15 +409,6 @@ class PlayerCharController extends CameraController {
 		anim.play(animStr, null, blend, speed);
 	}
 
-	function keyPressed(input: Keyboard, key: String, defkey: String) {
-		if (input == null) return false;
-		if (key == null || key == "") {
-			return input.started(defkey);
-		} else {
-			return input.started(key);
-		}
-	}
-	
 	public function setPath(path: Array<Vec4>) {
 		stopTween();
 
@@ -511,8 +442,10 @@ class PlayerCharController extends CameraController {
 
 		rotAnim = Tween.to({ target: this, props: { modelAzimuth: targetAngle }, duration: turnDuration});
 	}
+
 	function canInteractWithGameWorld(): Bool {
-		return !pauseMenu;
+		aimCursor.visible = !pauseMenu.visible;
+		return !pauseMenu.visible;
 	}
 	#end
 }

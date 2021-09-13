@@ -19,3 +19,7 @@ bin/*
 
 # Build artifacts
 build*
+
+# Armory artifacts
+khafile.js
+Sources/Main.hx

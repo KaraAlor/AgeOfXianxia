@@ -1,5 +1,6 @@
 package arm.ui;
 
+import kha.FastFloat;
 import zui.*;
 import iron.App;
 
@@ -28,6 +29,7 @@ class SettingsMenuController extends iron.Trait {
 
 	function init() {
         notifyOnRender2D(render2D);
+        data = new DataConfig();
 		if (null == data){
 			data = new DataConfig();
 			Storage.save();
@@ -51,99 +53,71 @@ class SettingsMenuController extends iron.Trait {
         ui.begin(g);
         // Make window
         if (ui.window(Id.handle(), panX, panY, panW, panH, true)) {
-            // Make panel in this window
-            if (ui.panel(Id.handle({selected: true}), "Settings")) {
-                ui.indent();
+            // Make tabs in this window
+            for (set in AllValues.list(DataConfig.KeySet)) {
+                if (set == DataConfig.KeySet.none) continue;
+                if (ui.tab(Id.handle(), Global.KeySetNames[cast set])) {
+                    ui.indent();
 
-                ui.text("");
+                    ui.text("");
 
-                ui.row([2/3, 1/3]);
-                ui.text("Run Key");
-                if (selectedKeyInput == runkey) {
-                    if (ui.button(selectedText)) {
-                        selectedKeyInput = none;
-                    }
-                } else {
-                    if (ui.button(data.key_run)) {
-                        selectedKeyInput = runkey;
-                    }
-                }
-
-                ui.row([2/3, 1/3]);
-                ui.text("Mouse Look Key");
-                if (selectedKeyInput == lookkey) {
-                    if (ui.button(selectedText)) {
-                        selectedKeyInput = none;
-                    }
-                } else {
-                    if (ui.button(data.key_mouselook)) {
-                        selectedKeyInput = lookkey;
-                    }
-                }
-
-                ui.row([2/3, 1/3]);
-                ui.text("View Key");
-                if (selectedKeyInput == viewkey) {
-                    if (ui.button(selectedText)) {
-                        selectedKeyInput = none;
-                    }
-                } else {
-                    if (ui.button(data.key_viewmode)) {
-                        selectedKeyInput = viewkey;
-                    }
-                }
-
-                ui.row([2/3, 1/3]);
-                ui.text("Pause Menu Key");
-                if (selectedKeyInput == pausekey) {
-                    if (ui.button(selectedText)) {
-                        selectedKeyInput = none;
-                    }
-                } else {
-                    if (ui.button(data.key_pausemenu)) {
-                        selectedKeyInput = pausekey;
-                    }
-                }
-
-                if (none != selectedKeyInput) {
-                    var key = listenToKey();
-                    if (null != key) {
-                        switch (selectedKeyInput) {
-                            case none: {}
-                            case runkey: {
-                                data.key_run = key;
-                                Storage.save();
-                            }
-                            case lookkey: {
-                                data.key_mouselook = key;
-                                Storage.save();
-                            }
-                            case viewkey: {
-                                data.key_viewmode = key;
-                                Storage.save();
-                            }
-                            case pausekey: {
-                                data.key_pausemenu = key;
-                                Storage.save();
+                    if (none != selectedKeyInput) {
+                        var key = listenToKey();
+                        if (null != key) {
+                            if (selectedKeyInput != DataConfig.KeyInput.none && data.keybinds != null && data.keybinds[cast selectedKeyInput] != null) {
+                                data.keybinds[cast selectedKeyInput].addkey(set, key);
+                                selectedKeyInput = null;
                             }
                         }
-                        selectedKeyInput = null;
                     }
-                }
 
-                ui.text("");
+                    for (keybind in  AllValues.list(DataConfig.KeyInput)) {
+                        if (keybind == DataConfig.KeyInput.none) continue;
+                        if (data.keybinds == null) continue;
+                        if (data.keybinds[cast keybind] == null) continue;
 
-                // Apply button
-                ui.row([1/3, 1/3, 1/3]);
-                if (ui.button("Apply")) {
-                    Storage.save();
+                        ui.row([8/16, 5/16, 1/16, 1/16, 1/16]);
+                        ui.text(data.keybinds[cast keybind].display());
+
+                        if (selectedKeyInput == keybind) {
+                            ui.text(selectedText);
+                            if (ui.button("+")) {
+                                selectedKeyInput = none;
+                            }
+                            if (ui.button("-")) {
+                                data.keybinds[cast keybind].popkey(set);
+                            }
+                            if (ui.button("_")) {
+                                data.keybinds[cast keybind].clearkeys(set);
+                            }
+                        } else {
+                            ui.text(data.keybinds[cast keybind].displaykeys(set));
+                            if (ui.button("+")) {
+                                selectedKeyInput = keybind;
+                            }
+                            if (ui.button("-")) {
+                                data.keybinds[cast keybind].popkey(set);
+                            }
+                            if (ui.button("_")) {
+                                data.keybinds[cast keybind].clearkeys(set);
+                            }
+                        }
+                    }
+
+                    ui.text("");
+
+                    // Apply button
+                    ui.row([1/3, 1/3, 1/3]);
+                    if (ui.button("Apply")) {
+                        Storage.save();
+                    }
+                    ui.text("");
+                    // Close button
+                    if (ui.button("Close")) {
+                        visible = false;
+                    }
+                    ui.unindent();
                 }
-                ui.text("");
-                // Close button
-                if (ui.button("Close")) {
-                    visible = false;
-                }
-                ui.unindent();
             }
         }
         ui.end();
