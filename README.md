@@ -1,4 +1,4 @@
-# AgeOfXianxia
+# AgeOfXianxia - Pages [here](https://karaalor.github.io/AgeOfXianxia/)
 ## About
 New game project for mix of xianxia and asatru lore.  Development is still very early and all features / design goals are subject to change.
 
