@@ -35,7 +35,7 @@ Releases will be versioned and packed into a zip for convenience each release wi
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details
 
 ## Team
-Currently we are a small team of two developers
+Currently we are a small team of three developers
 
 ## Contact Us
 You can contact us via email at plorentz7@gmail.com
