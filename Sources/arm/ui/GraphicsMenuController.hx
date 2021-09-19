@@ -51,7 +51,7 @@ class GraphicsMenuController extends iron.Trait {
         // Make window
         if (ui.window(Id.handle(), panX, panY, panW, panH, true)) {
             // Make panel in this window
-            if (ui.panel(Id.handle({selected: true}), "Graphics")) {
+            if (ui.tab(Id.handle({selected: true}), "Graphics")) {
                 ui.indent();
 
                 // Fullscreen checkbox

@@ -109,11 +109,11 @@ class PlayerCharController extends CameraController {
 		//ensure our parameters are setup
 		if (!body.ready || null == playerRoot || null == armature || null == cameraParent || null == navObj || null == cameraObj) return;
 
-		Data.getSound("step0.wav", function(sound: kha.Sound) {
+		Data.getSound("sounds/step0.wav", function(sound: kha.Sound) {
 			soundStep0 = sound;
 		});
 
-		Data.getSound("step1.wav", function(sound: kha.Sound) {
+		Data.getSound("sounds/step1.wav", function(sound: kha.Sound) {
 			soundStep1 = sound;
 		});
 
@@ -200,7 +200,7 @@ class PlayerCharController extends CameraController {
 			} else {
 				navAgentControl();
 				rotateView(new Vec2(0, 0));
-				setState("idleGun", 2.0);
+				// setState("idleGun", 2.0);
 			}
 		} else {
 			if (data.keyPressed(DataConfig.KeyInput.pausekey)) {
@@ -232,7 +232,7 @@ class PlayerCharController extends CameraController {
 			var action = moveForward  ? "runGun"  :
 						 moveBackward ? "backGun" :
 						 moveLeft     ? "leftGun" : "rightGun";
-			setState(action);
+			// setState(action);
 			//normalize
 			dir = dir.normalize();
 			//speed
@@ -250,7 +250,7 @@ class PlayerCharController extends CameraController {
 				}
 			}
 		} else {
-			setState("idleGun", 2.0);
+			// setState("idleGun", 2.0);
 			stepTime = 0;
 		}
 
