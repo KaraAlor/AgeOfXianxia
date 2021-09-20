@@ -49,14 +49,6 @@ jobs:
           target-folder: web-based
   krom-linux:
     runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ 'javascript' ]
     steps:
       - uses: actions/checkout@v2
       - name: Build
@@ -66,14 +58,6 @@ jobs:
           exporter: krom-linux
   linux-hl:
     runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ 'javascript' ]
     steps:
       - uses: actions/checkout@v2
       - name: Build
@@ -83,14 +67,6 @@ jobs:
           exporter: linux-hl
   android-hl:
     runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ 'javascript' ]
     steps:
       - uses: actions/checkout@v2
       - name: Build
@@ -100,14 +76,6 @@ jobs:
           exporter: android-hl
   windows-hl:
     runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ 'javascript' ]
     steps:
       - uses: actions/checkout@v2
       - name: Build
@@ -117,14 +85,6 @@ jobs:
           exporter: windows-hl
   macos-hl:
     runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ 'javascript' ]
     steps:
       - uses: actions/checkout@v2
       - name: Build
@@ -134,14 +94,6 @@ jobs:
           exporter: macos-hl
   ios-hl:
     runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ 'javascript' ]
     steps:
       - uses: actions/checkout@v2
       - name: Build
