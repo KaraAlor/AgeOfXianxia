@@ -1,6 +1,5 @@
 package arm.character;
 
-import js.html.webgl.TransformFeedback;
 import arm.ui.AimCursorController;
 import arm.ui.PauseMenuController;
 import zui.*;
