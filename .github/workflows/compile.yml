@@ -1,0 +1,78 @@
+name: compile_tests
+
+on:
+  push:
+    paths:
+      - ./**
+      - .github/workflows/compile.yml
+
+jobs:
+  html5:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        uses: tong/armory_gh_actions@v0.0.32
+        with:
+          blend: main.blend
+          exporter: html5
+      - name: Deploy gh-pages
+        uses: JamesIves/github-pages-deploy-action@4.1.4
+        with:
+          branch: pages
+          folder: ${{ github.workflow }}/build_main/html5
+          target-folder: ${{ github.workflow }}
+  krom-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        uses: tong/armory_gh_actions@v0.0.32
+        with:
+          blend: main.blend
+          exporter: krom-linux
+  linux-hl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        uses: tong/armory_gh_actions@v0.0.32
+        with:
+          blend: main.blend
+          exporter: linux-hl
+  android-hl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        uses: tong/armory_gh_actions@v0.0.32
+        with:
+          blend: main.blend
+          exporter: android-hl
+  windows-hl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        uses: tong/armory_gh_actions@v0.0.32
+        with:
+          blend: main.blend
+          exporter: windows-hl
+  macos-hl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        uses: tong/armory_gh_actions@v0.0.32
+        with:
+          blend: main.blend
+          exporter: macos-hl
+  ios-hl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        uses: tong/armory_gh_actions@v0.0.32
+        with:
+          blend: main.blend
+          exporter: ios-hl
