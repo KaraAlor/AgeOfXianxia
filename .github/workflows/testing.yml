@@ -120,11 +120,3 @@ jobs:
           publish: ios-hl
           blend: main.blend
           blender: latest/stable
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Build
-        uses: tong/armory_gh_actions@v0.0.32
-        with:
-          blend: main.blend
-          exporter: ios-hl
