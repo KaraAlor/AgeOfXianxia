@@ -90,6 +90,16 @@ jobs:
           publish: android-hl
           blend: main.blend
           blender: latest/stable
+  krom-windows:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        uses: tong/armory_gh_actions@v0.1.9
+        with:
+          publish: krom-windows
+          blend: main.blend
+          blender: latest/stable
   windows-hl:
     runs-on: ubuntu-latest
     steps:
