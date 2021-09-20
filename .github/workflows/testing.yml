@@ -16,16 +16,8 @@ on:
     - cron: '17 12 * * 5'
 
 jobs:
-  html5:
+  html5-pages:
     runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ 'javascript' ]
     steps:
       - uses: actions/checkout@v2
       - name: Build
@@ -33,13 +25,6 @@ jobs:
         with:
           blend: main.blend
           exporter: html5
-      # Initializes the CodeQL tools for scanning.
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v1
-        with:
-          languages: ${{ matrix.language }}
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v1
       # Deploy github pages
       - name: Deploy gh-pages
         uses: JamesIves/github-pages-deploy-action@4.1.4
