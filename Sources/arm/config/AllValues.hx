@@ -1,4 +1,4 @@
-package arm;
+package arm.config;
 
 import haxe.macro.Expr;
 import haxe.macro.Context;

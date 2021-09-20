@@ -20,6 +20,9 @@ class CreditsMenuController extends iron.Trait {
         });
 	}
 
+	public override function remove() {
+	}
+
 	function init() {
         notifyOnRender2D(render2D);
 	}

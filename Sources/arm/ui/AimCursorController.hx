@@ -3,7 +3,9 @@ package arm.ui;
 import zui.*;
 import iron.App;
 import iron.data.Data;
-import arm.dataConfig.*;
+
+import arm.config.*;
+import arm.config.DataConfig;
 import iron.system.Storage;
 
 class AimCursorController {
@@ -21,6 +23,9 @@ class AimCursorController {
             iron.Scene.active.notifyOnInit(init);
         });
     }
+
+	public function remove() {
+	}
 
 	function init(){
 		if (null == data) {

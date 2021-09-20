@@ -1,5 +1,6 @@
 package arm.character;
 
+import js.html.webgl.TransformFeedback;
 import arm.ui.AimCursorController;
 import arm.ui.PauseMenuController;
 import zui.*;
@@ -22,7 +23,8 @@ import iron.system.Input;
 import iron.system.Audio;
 import iron.system.Storage;
 
-import arm.dataConfig.*;
+import arm.config.*;
+import arm.config.DataConfig;
 import armory.data.Config;
 import iron.data.Data;
 import iron.data.SceneFormat;
@@ -30,44 +32,41 @@ import iron.data.SceneFormat;
 import iron.object.Object;
 import iron.object.Transform;
 import iron.object.MeshObject;
+import iron.object.CameraObject;
 import iron.object.BoneAnimation;
 
 import armory.trait.Character;
 import armory.trait.physics.RigidBody;
 import armory.trait.physics.PhysicsWorld;
 import armory.trait.navigation.Navigation;
-import armory.trait.internal.CameraController;
-import bullet.Bt.KinematicCharacterController;
 
-class PlayerCharController extends CameraController {
-	#if (!arm_physics)
-	public function new() { super(); }
-	#else
-
+class PlayerCharController extends Trait {
 	//Properties
-	@prop var FPviewdist = 0.0;
-    @prop var TPviewMin = 1.0;
-    @prop var TPviewMax = 5.0;
-	@prop var TDviewMin = 5.0;
-	@prop var TDviewMax = 20.0;
+	@prop public var FPviewdist = 0.0;
+    @prop public var TPviewMin = 1.0;
+    @prop public var TPviewMax = 5.0;
+	@prop public var TDviewMin = 5.0;
+	@prop public var TDviewMax = 20.0;
 
-	@prop var WalkSpeed: Float = 5.0;
-	@prop var RunSpeed: Float = 7.5;
-	@prop var turnDuration: Float = 0.4;
-	@prop var StepDelay: Float = 1.5;
+	@prop public var WalkSpeed: Float = 5.0;
+	@prop public var RunSpeed: Float = 7.5;
+	@prop public var turnDuration: Float = 0.4;
+	@prop public var StepDelay: Float = 1.5;
 
-	@prop var playerRoot: Object = null;
-	@prop var armature: Object = null;
-	@prop var cameraParent: Object = null;
-	@prop var cameraObj: Object = null;
-	@prop var navObj: Object = null;
+	@prop public var playerRoot: Object = null;
+	@prop public var armature: Object = null;
+	@prop public var cameraParent: Object = null;
+	@prop public var cameraObj: Object = null;
+	@prop public var cam: CameraObject = null;
+	@prop public var body: RigidBody = null;
+	@prop public var transform: Transform = null;
 
 	//Storage
 	static var data: DataConfig = Storage.data.config;
 
 	//GUI
 	var aimCursor: AimCursorController = new AimCursorController();
-	var pauseMenu: PauseMenuController = new PauseMenuController();
+	var pauseMenu: PauseMenuController;
 	var chatMenu: Bool = true;
 	var characterMenu: Bool = false;
 	var inventoryMenu: Bool = false;
@@ -99,15 +98,52 @@ class PlayerCharController extends CameraController {
 	var state = "idleGun";
 	var anim: BoneAnimation;
 
-    public function new(){
+	public function new(?proot: Object, ?arm: Object, ?cparent: Object, ?cobj: Object, ?camera: CameraObject, ?bdy: RigidBody, ?tform: Transform){
         super();
+
+		if (null != proot) playerRoot = proot;
+		if (null != arm) armature = arm;
+		if (null != cparent) cameraParent = cparent;
+		if (null != cobj) cameraObj = cobj;
+		if (null != camera) cam = camera;
+		if (null != bdy) body = bdy;
+		if (null != tform) transform = tform;
         
-		iron.Scene.active.notifyOnInit(init);
+		notifyOnInit(init);
     }
 
 	function init(){
 		//ensure our parameters are setup
-		if (!body.ready || null == playerRoot || null == armature || null == cameraParent || null == navObj || null == cameraObj) return;
+		if (null == playerRoot || null == armature || null == cameraParent || null == cameraObj) {
+			trace("error");
+			return;
+		}
+		
+		if (null == body) {
+			if (null != object) body = object.getTrait(RigidBody);
+			else body = playerRoot.getTrait(RigidBody);
+		}
+		if (null == body) {
+			trace("error");
+			return;
+		}
+		
+		if (null == transform){
+			if (null != object) transform = object.transform;
+			else transform = playerRoot.transform;
+		} 
+		if (null == transform) {
+			trace("error");
+			return;
+		}
+
+		if (null == cam) {
+			cam = Scene.active.cameras[Scene.active.cameras.length - 1];
+		}
+		if (null == cam) {
+			trace("error");
+			return;
+		}
 
 		Data.getSound("sounds/step0.wav", function(sound: kha.Sound) {
 			soundStep0 = sound;
@@ -117,16 +153,18 @@ class PlayerCharController extends CameraController {
 			soundStep1 = sound;
 		});
 
+		pauseMenu = new PauseMenuController(closePauseMenu);
 		anim = findAnimation(armature);
 		//last loading check
 		if (null == data) {
 			data = new DataConfig();
 		}
-		if (null == anim) return;
+		if (null != anim) {
+			anim.notifyOnUpdate(updateBones);
+		}
 		
         viewerDistance = cameraObj.transform.loc.x;
 
-		anim.notifyOnUpdate(updateBones);
 		PhysicsWorld.active.notifyOnPreUpdate(preUpdate);
 		notifyOnUpdate(update);
 		notifyOnLateUpdate(lateUpdate);
@@ -157,7 +195,7 @@ class PlayerCharController extends CameraController {
 			} else {
 				// moving camera
 				if (mouse.locked && mouse.moved){
-					rotateView(new Vec2(-mouse.movementX * data.MouseHorizontalScale, -mouse.movementY * data.MouseVerticalScale));
+					rotateView(new Vec2(-mouse.movementX * data.MouseHorizontalScale, mouse.movementY * data.MouseVerticalScale));
 				};
 				if (mouse.wheelDelta != 0){
 					zoomView(mouse.wheelDelta);
@@ -214,14 +252,26 @@ class PlayerCharController extends CameraController {
     }
 
 	function directControl() {
-		var keyboard = Input.getKeyboard();
 		//movement
-		var look = armature.transform.look().normalize();
 		dir.set(0, 0, 0);
-		if (moveForward) dir.add(transform.look());
-		if (moveBackward) dir.add(transform.look().mult(-1));
-		if (moveLeft) dir.add(transform.right().mult(-1));
-		if (moveRight) dir.add(transform.right());
+
+		var moveForward = false, moveBackward = false, moveLeft = false, moveRight = false, Jump = false, Crouch = false;
+		if (data.keyDown(DataConfig.KeyInput.forwardkey)) {
+			moveForward = true;
+			dir.add(transform.look().mult(-1));
+		}
+		if (data.keyDown(DataConfig.KeyInput.backwardkey)) {
+			moveBackward = true;
+			dir.add(transform.look());
+		}
+		if (data.keyDown(DataConfig.KeyInput.leftkey)) {
+			moveLeft = true;
+			dir.add(transform.right());
+		}
+		if (data.keyDown(DataConfig.KeyInput.rightkey)) {
+			moveRight = true;
+			dir.add(transform.right().mult(-1));
+		}
 
 		//running
 		var speed = WalkSpeed;
@@ -261,20 +311,20 @@ class PlayerCharController extends CameraController {
 	function navAgentControl() {
 		var mouse: Mouse = Input.getMouse();
 
-		if (mouse.down("left")){
-			var physics = PhysicsWorld.active;
-			var b = physics.pickClosest(mouse.x, mouse.y);
-			var rb = navObj.getTrait(RigidBody);
+		// if (mouse.down("left")){
+		// 	var physics = PhysicsWorld.active;
+		// 	var b = physics.pickClosest(mouse.x, mouse.y);
+		// 	var rb = navObj.getTrait(RigidBody);
 
-			if (rb != null && b == rb) {
-				var from: Vec4 = playerRoot.transform.world.getLoc();
-				var to: Vec4 = physics.hitPointWorld;
+		// 	if (rb != null && b == rb) {
+		// 		var from: Vec4 = playerRoot.transform.world.getLoc();
+		// 		var to: Vec4 = physics.hitPointWorld;
 
-				Navigation.active.navMeshes[0].findPath(from, to, function(path: Array<Vec4>) {
-					setPath(path);
-				});
-			}
-		}
+		// 		Navigation.active.navMeshes[0].findPath(from, to, function(path: Array<Vec4>) {
+		// 			setPath(path);
+		// 		});
+		// 	}
+		// }
 	}
 
 	function lateUpdate(){
@@ -282,80 +332,6 @@ class PlayerCharController extends CameraController {
 	}
 
 	function updateBones() {
-		var q = new Quat();
-		var mat = Mat4.identity();
-		// Fetch bone
-		var bone1 = anim.getBone("mixamorig:LeftForeArm");
-		var bone2 = anim.getBone("mixamorig:RightForeArm");
-
-		// Fetch bone matrix - this is in local bone space for now
-		var m1 = anim.getBoneMat(bone1);
-		var m2 = anim.getBoneMat(bone2);
-		var m1b = anim.getBoneMatBlend(bone1);
-		var m2b = anim.getBoneMatBlend(bone2);
-		var a1 = anim.getAbsMat(bone1.parent);
-		var a2 = anim.getAbsMat(bone2.parent);
-
-		// Rotate hand bones to aim with gun
-		// Some raw math follows..
-		var tx = m1._30;
-		var ty = m1._31;
-		var tz = m1._32;
-		m1._30 = 0;
-		m1._31 = 0;
-		m1._32 = 0;
-		mat.getInverse(a1);
-		q.fromAxisAngle(mat.right(), viewerAltitude);
-		m1.applyQuat(q);
-		m1._30 = tx;
-		m1._31 = ty;
-		m1._32 = tz;
-		
-		var tx = m2._30;
-		var ty = m2._31;
-		var tz = m2._32;
-		m2._30 = 0;
-		m2._31 = 0;
-		m2._32 = 0;
-		mat.getInverse(a2);
-		var v = mat.right();
-		v.mult(-1);
-		q.fromAxisAngle(v, -viewerAltitude);
-		m2.applyQuat(q);
-		m2._30 = tx;
-		m2._31 = ty;
-		m2._32 = tz;
-
-		// Animation blending is in progress, we need to rotate those bones too
-		if (m1b != null && m2b != null) {
-			var tx = m1b._30;
-			var ty = m1b._31;
-			var tz = m1b._32;
-			m1b._30 = 0;
-			m1b._31 = 0;
-			m1b._32 = 0;
-			mat.getInverse(a1);
-			q.fromAxisAngle(mat.right(), viewerAltitude);
-			m1b.applyQuat(q);
-			m1b._30 = tx;
-			m1b._31 = ty;
-			m1b._32 = tz;
-			
-			var tx = m2b._30;
-			var ty = m2b._31;
-			var tz = m2b._32;
-			m2b._30 = 0;
-			m2b._31 = 0;
-			m2b._32 = 0;
-			mat.getInverse(a2);
-			var v = mat.right();
-			v.mult(-1);
-			q.fromAxisAngle(v, -viewerAltitude);
-			m2b.applyQuat(q);
-			m2b._30 = tx;
-			m2b._31 = ty;
-			m2b._32 = tz;
-		}
 	}
 
 	function removeFromWorld(){
@@ -384,8 +360,7 @@ class PlayerCharController extends CameraController {
 		} else if (cameraMode == 2) {
 			viewerDistance = Math.min(Math.max(viewerDistance + delta, TDviewMin),TDviewMax);
 		}
-		// cameraObj.transform.loc = new Vec4(0, -viewerDistance, 0, 0);
-		cameraObj.transform.translate(0, -viewerDistance - cameraObj.transform.loc.y, 0);
+		cameraObj.transform.loc.set(0, viewerDistance, 0);
 		cameraObj.transform.buildMatrix();
 	}
 
@@ -447,5 +422,9 @@ class PlayerCharController extends CameraController {
 		aimCursor.visible = !pauseMenu.visible;
 		return !pauseMenu.visible;
 	}
-	#end
+	
+	public function closePauseMenu() {
+		pauseMenu.visible = false;
+		aimCursor.visible = true;
+	}
 }

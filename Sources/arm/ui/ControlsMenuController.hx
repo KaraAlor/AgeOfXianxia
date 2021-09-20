@@ -4,7 +4,9 @@ import kha.FastFloat;
 import zui.*;
 import iron.App;
 
-import arm.DataConfig;
+import arm.config.*;
+import arm.config.DataConfig;
+import arm.config.AllValues;
 import iron.system.Storage;
 import kha.input.Keyboard;
 
@@ -25,6 +27,9 @@ class ControlsMenuController extends iron.Trait {
             ui = new Zui({font: f});
             iron.Scene.active.notifyOnInit(init);
         });
+	}
+
+	public override function remove() {
 	}
 
 	function init() {

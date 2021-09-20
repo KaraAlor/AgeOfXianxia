@@ -1,4 +1,4 @@
-package arm;
+package arm.config;
 
 import iron.system.Input;
 
@@ -9,6 +9,12 @@ abstract KeyInput(Int) {
 	var viewkey = 2;
 	var lookkey = 3;
 	var pausekey = 4;
+	var forwardkey = 5;
+	var backwardkey = 6;
+	var leftkey = 7;
+	var rightkey = 8;
+	var jumpkey = 9;
+	var crouchkey = 10;
 }
 
 @:enum
@@ -170,7 +176,13 @@ class Global {
 		new KeyBind(["shift"], [], [], "Sprint Key"), 
 		new KeyBind(["v"], [], [], "Mouse Look Key"),
 		new KeyBind(["alt"], [], [], "View Key"),
-		new KeyBind(["escape"], [], [], "Pause Menu Key")
+		new KeyBind(["tab"], [], [], "Pause Menu Key"),
+		new KeyBind(["w"], [], [], "Strafe Forward Key"),
+		new KeyBind(["s"], [], [], "Strafe Backward Key"),
+		new KeyBind(["a"], [], [], "Strafe Left Key"),
+		new KeyBind(["d"], [], [], "Strafe Right Key"),
+		new KeyBind(["space"], [], [], "Strafe Up(jump) Key"),
+		new KeyBind(["ctrl"], [], [], "Strafe Down(crouch) Key")
 	];
 
 	//Key settings

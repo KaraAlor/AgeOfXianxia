@@ -3,7 +3,8 @@ package arm.ui;
 import zui.*;
 import iron.App;
 
-import arm.DataConfig;
+import arm.config.*;
+import arm.config.DataConfig;
 import armory.data.Config;
 import iron.system.Storage;
 import armory.renderpath.RenderPathCreator;
@@ -23,6 +24,9 @@ class GraphicsMenuController extends iron.Trait {
             ui = new Zui({font: f});
             iron.Scene.active.notifyOnInit(init);
         });
+	}
+
+	public override function remove() {
 	}
 
 	function init() {
