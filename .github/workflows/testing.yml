@@ -32,6 +32,30 @@ jobs:
           branch: pages
           folder: build_main/html5
           target-folder: web-based
+  html5-security:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'javascript' ]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        uses: tong/armory_gh_actions@v0.0.32
+        with:
+          blend: main.blend
+          exporter: html5
+      # Initializes the CodeQL tools for scanning.
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v1
+        with:
+          languages: ${{ matrix.language }}
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v1
   krom-linux:
     runs-on: ubuntu-latest
     steps:
