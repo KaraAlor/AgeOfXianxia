@@ -25,7 +25,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'cpp', 'javascript' ]
+        language: [ 'javascript' ]
     steps:
       - uses: actions/checkout@v2
       - name: Build
@@ -56,7 +56,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'cpp', 'javascript' ]
+        language: [ 'javascript' ]
     steps:
       - uses: actions/checkout@v2
       - name: Build
@@ -64,13 +64,6 @@ jobs:
         with:
           blend: main.blend
           exporter: krom-linux
-      # Initializes the CodeQL tools for scanning.
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v1
-        with:
-          languages: ${{ matrix.language }}
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v1
   linux-hl:
     runs-on: ubuntu-latest
     permissions:
@@ -80,7 +73,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'cpp', 'javascript' ]
+        language: [ 'javascript' ]
     steps:
       - uses: actions/checkout@v2
       - name: Build
@@ -88,13 +81,6 @@ jobs:
         with:
           blend: main.blend
           exporter: linux-hl
-      # Initializes the CodeQL tools for scanning.
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v1
-        with:
-          languages: ${{ matrix.language }}
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v1
   android-hl:
     runs-on: ubuntu-latest
     permissions:
@@ -104,7 +90,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'cpp', 'javascript' ]
+        language: [ 'javascript' ]
     steps:
       - uses: actions/checkout@v2
       - name: Build
@@ -112,13 +98,6 @@ jobs:
         with:
           blend: main.blend
           exporter: android-hl
-      # Initializes the CodeQL tools for scanning.
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v1
-        with:
-          languages: ${{ matrix.language }}
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v1
   windows-hl:
     runs-on: ubuntu-latest
     permissions:
@@ -128,7 +107,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'cpp', 'javascript' ]
+        language: [ 'javascript' ]
     steps:
       - uses: actions/checkout@v2
       - name: Build
@@ -136,13 +115,6 @@ jobs:
         with:
           blend: main.blend
           exporter: windows-hl
-      # Initializes the CodeQL tools for scanning.
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v1
-        with:
-          languages: ${{ matrix.language }}
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v1
   macos-hl:
     runs-on: ubuntu-latest
     permissions:
@@ -152,7 +124,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'cpp', 'javascript' ]
+        language: [ 'javascript' ]
     steps:
       - uses: actions/checkout@v2
       - name: Build
@@ -160,13 +132,6 @@ jobs:
         with:
           blend: main.blend
           exporter: macos-hl
-      # Initializes the CodeQL tools for scanning.
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v1
-        with:
-          languages: ${{ matrix.language }}
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v1
   ios-hl:
     runs-on: ubuntu-latest
     permissions:
@@ -176,7 +141,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'cpp', 'javascript' ]
+        language: [ 'javascript' ]
     steps:
       - uses: actions/checkout@v2
       - name: Build
@@ -184,10 +149,3 @@ jobs:
         with:
           blend: main.blend
           exporter: ios-hl
-      # Initializes the CodeQL tools for scanning.
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v1
-        with:
-          languages: ${{ matrix.language }}
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v1
