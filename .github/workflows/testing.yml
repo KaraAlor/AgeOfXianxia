@@ -4,13 +4,15 @@ on:
   push:
     branches: [ main, workflow ]
     paths:
-      - **
+      - main.blend
+      - Sources/**
       - .github/workflows/testing.yml
   pull_request:
     # The branches below must be a subset of the branches above
     branches: [ main, workflow ]
     paths:
-      - **
+      - main.blend
+      - Sources/**
       - .github/workflows/testing.yml
   schedule:
     - cron: '17 12 * * 5'
