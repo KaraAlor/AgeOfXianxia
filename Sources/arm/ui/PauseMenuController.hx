@@ -7,12 +7,15 @@ import iron.App;
 import iron.Scene;
 import kha.System;
 
+@:access(zui.Zui)
 class PauseMenuController {
 	//GUI
+    var closePauseMenu: Void->Void;
     var ui:Zui;
     public var visible: Bool = false;
 
-    public function new(){
+    public function new(parentfn: Void->Void){
+        closePauseMenu = parentfn;
         // Load font for UI labels
         Data.getFont("font_default.ttf", function(f:kha.Font) {
             ui = new Zui({font: f});
@@ -20,9 +23,13 @@ class PauseMenuController {
         });
     }
 
+	public function remove() {
+	}
+
 	function init(){
         App.notifyOnRender2D(render2D);
 	}
+
 	function render2D(g:kha.graphics2.Graphics) {
         if (!visible) return;
 		g.end();
@@ -43,6 +50,7 @@ class PauseMenuController {
                 ui.text("");
                 if (ui.button("Return")) {
                     visible = false;
+                    closePauseMenu();
                 }
                 ui.text("");
                 
@@ -51,6 +59,7 @@ class PauseMenuController {
                 ui.row([1/4, 1/2, 1/4]);
                 ui.text("");
                 if (ui.button("Back to Main Menu")) {
+                    visible = false;
                     Scene.setActive("MainMenu");
                 }
                 ui.text("");
@@ -60,6 +69,7 @@ class PauseMenuController {
                 ui.row([1/4, 1/2, 1/4]);
                 ui.text("");
                 if (ui.button("Quit to Desktop")) {
+                    visible = false;
                     System.stop();
                 }
                 ui.text("");

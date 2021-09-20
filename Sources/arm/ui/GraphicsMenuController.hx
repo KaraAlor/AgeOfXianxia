@@ -3,7 +3,8 @@ package arm.ui;
 import zui.*;
 import iron.App;
 
-import arm.DataConfig;
+import arm.config.*;
+import arm.config.DataConfig;
 import armory.data.Config;
 import iron.system.Storage;
 import armory.renderpath.RenderPathCreator;
@@ -23,6 +24,9 @@ class GraphicsMenuController extends iron.Trait {
             ui = new Zui({font: f});
             iron.Scene.active.notifyOnInit(init);
         });
+	}
+
+	public override function remove() {
 	}
 
 	function init() {
@@ -51,7 +55,7 @@ class GraphicsMenuController extends iron.Trait {
         // Make window
         if (ui.window(Id.handle(), panX, panY, panW, panH, true)) {
             // Make panel in this window
-            if (ui.panel(Id.handle({selected: true}), "Graphics")) {
+            if (ui.tab(Id.handle({selected: true}), "Graphics")) {
                 ui.indent();
 
                 // Fullscreen checkbox
