@@ -18,15 +18,16 @@ on:
     - cron: '17 12 * * 5'
 
 jobs:
-  html5-pages:
+  html5:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        uses: tong/armory_gh_actions@v0.0.32
+        uses: tong/armory_gh_actions@v0.1.10
         with:
           blend: main.blend
-          exporter: html5
+          publish: html5
+          blender: latest/stable
       # Deploy github pages
       - name: Deploy gh-pages
         uses: JamesIves/github-pages-deploy-action@4.1.4
@@ -47,10 +48,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        uses: tong/armory_gh_actions@v0.0.32
+        uses: tong/armory_gh_actions@v0.1.10
         with:
           blend: main.blend
-          exporter: html5
+          publish: html5
+          blender: latest/stable
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v1
@@ -63,47 +65,61 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        uses: tong/armory_gh_actions@v0.0.32
+        uses: tong/armory_gh_actions@v0.1.9
         with:
+          publish: krom-linux
           blend: main.blend
-          exporter: krom-linux
+          blender: latest/stable
   linux-hl:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        uses: tong/armory_gh_actions@v0.0.32
+        uses: tong/armory_gh_actions@v0.1.9
         with:
+          publish: linux-hl
           blend: main.blend
-          exporter: linux-hl
+          blender: latest/stable
   android-hl:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        uses: tong/armory_gh_actions@v0.0.32
+        uses: tong/armory_gh_actions@v0.1.9
         with:
+          publish: android-hl
           blend: main.blend
-          exporter: android-hl
+          blender: latest/stable
   windows-hl:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        uses: tong/armory_gh_actions@v0.0.32
+        uses: tong/armory_gh_actions@v0.1.9
         with:
+          publish: windows-hl
           blend: main.blend
-          exporter: windows-hl
+          blender: latest/stable
   macos-hl:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        uses: tong/armory_gh_actions@v0.0.32
+        uses: tong/armory_gh_actions@v0.1.9
         with:
+          publish: macos-hl
           blend: main.blend
-          exporter: macos-hl
+          blender: latest/stable
   ios-hl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        uses: tong/armory_gh_actions@v0.1.9
+        with:
+          publish: ios-hl
+          blend: main.blend
+          blender: latest/stable
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
