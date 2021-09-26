@@ -1,0 +1,3 @@
+build/hl.hxml
+-lib hldx
+-hl bin/client-dx.hl

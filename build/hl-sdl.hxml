@@ -1,0 +1,3 @@
+build/hl.hxml
+-lib hlsdl
+-hl bin/client-sdl.hl

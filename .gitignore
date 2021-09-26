@@ -1,25 +1,17 @@
-# Build files
-build/*
+# Project build files
+release
+bin
 
-# Releases
-bin/*
-
-# Log files
+# IDE artifacts
+.vscode/*
+.idea
+**/*sublime*
 **/log.txt
 
-# Vs code artifacts
-.vscode/*
-
-# Sublime artifacts
-**/*sublime*
+# Vscode debugging
+!.vscode/launch.json
+!.vscode/tasks.json
 
 # Blender Backups
 **/*.blend*
-!**/*.blend
 
-# Build artifacts
-build*
-
-# Armory artifacts
-khafile.js
-Sources/Main.hx

@@ -1,0 +1,124 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+            "label": "haxe",
+			"type": "haxe",
+			"args": "active configuration",
+            "problemMatcher": [
+                "$haxe-absolute",
+                "$haxe",
+                "$haxe-error",
+                "$haxe-trace"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+		},
+		{
+            "label": "release",
+			"type": "shell",
+            "command": "build/build.bat ${workspaceFolder}",
+            "group": "build",
+            "problemMatcher": [
+            ]
+		},
+		{
+            "label": "haxe: hl-dx.hxml",
+            "type": "shell",
+            "command": "ubuntu run make ./build/hl-dx",
+            "problemMatcher": [
+                "$haxe-absolute",
+                "$haxe",
+                "$haxe-error",
+                "$haxe-trace"
+            ],
+            "group": "build"
+        },
+        {
+            "label": "haxe: hl-dx-debug.hxml",
+            "type": "shell",
+            "command": "ubuntu run make ./build/hl-dx-debug",
+            "problemMatcher": [
+                "$haxe-absolute",
+                "$haxe",
+                "$haxe-error",
+                "$haxe-trace"
+            ],
+            "group": "build"
+        },
+        {
+            "label": "haxe: hl-sdl.hxml",
+            "type": "shell",
+            "command": "ubuntu run make ./build/hl-sdl",
+            "problemMatcher": [
+                "$haxe-absolute",
+                "$haxe",
+                "$haxe-error",
+                "$haxe-trace"
+            ],
+            "group": "build"
+        },
+        {
+            "label": "haxe: hl-sdl-debug.hxml",
+            "type": "shell",
+            "command": "ubuntu run make ./build/hl-sdl-debug",
+            "problemMatcher": [
+                "$haxe-absolute",
+                "$haxe",
+                "$haxe-error",
+                "$haxe-trace"
+            ],
+            "group": "build"
+        },
+        {
+            "label": "haxe: js.hxml",
+            "type": "shell",
+            "command": "ubuntu run make ./build/js",
+            "problemMatcher": [
+                "$haxe-absolute",
+                "$haxe",
+                "$haxe-error",
+                "$haxe-trace"
+            ],
+            "group": "build"
+        },
+        {
+            "label": "haxe: js-debug.hxml",
+            "type": "shell",
+            "command": "ubuntu run make ./build/js-debug",
+            "problemMatcher": [
+                "$haxe-absolute",
+                "$haxe",
+                "$haxe-error",
+                "$haxe-trace"
+            ],
+            "group": "build"
+        },
+        {
+            "label": "haxe: swf.hxml",
+            "type": "shell",
+            "command": "ubuntu run make ./build/swf",
+            "problemMatcher": [
+                "$haxe-absolute",
+                "$haxe",
+                "$haxe-error",
+                "$haxe-trace"
+            ],
+            "group": "build"
+        },
+        {
+            "label": "haxe: swf-debug.hxml",
+            "type": "shell",
+            "command": "ubuntu run make ./build/swf-debug",
+            "problemMatcher": [
+                "$haxe-absolute",
+                "$haxe",
+                "$haxe-error",
+                "$haxe-trace"
+            ],
+            "group": "build"
+        }
+	]
+}

@@ -1,0 +1,48 @@
+name: Haxe tests
+
+on:
+  push:
+    branches: [ main, heaps ]
+    paths:
+      - src/**
+      - .github/workflows/haxe.yml
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [ main, heaps ]
+    paths:
+      - src/**
+      - .github/workflows/haxe.yml
+  schedule:
+    - cron: '17 12 * * 5'
+    
+jobs:
+  haxe:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        haxe: [4.2.3, 3.4.7]
+      fail-fast: true
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup
+        run: make setup
+      - name: Build
+        run: make all
+      - name: list
+        run: ls release/
+  pages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup
+        run: make setup
+      - name: Build
+        run: make js
+      # Deploy github pages
+      - name: Deploy gh-pages
+        uses: JamesIves/github-pages-deploy-action@4.1.4
+        with:
+          branch: pages
+          folder: release/js/js
+          target-folder: web-based

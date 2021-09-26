@@ -6,16 +6,10 @@ New game project for mix of xianxia and asatru lore.  Development is still very 
 Releases come bundled with all the files needed to execute the program.
 
 ## Prerequisites (Building)
-This project is built inside a docker so all you need to build this is to create our docker image.
-Docker build config can be found [here.](https://raw.githubusercontent.com/Kyrasuum/Configs/main/dev_docker.txt)
-
-This project utilizes [Armory3d](https://github.com/armory3d/armory) which is build on [Kha](https://kha.tech/) (written in [haxe](https://haxe.org/)).
-Armory needs to therefore be installed in order to build this project.
-Follow tutorial [here.](https://github.com/armory3d/armory/wiki/setup)
-Armory builds using blender (should be installed via docker config) which means blender needs to have armory added as a plugin.
+Libraries should be able to be setup using the setup target in the makefile.  For any issues that occur during setup create a new issue.
 
 ## Building
-Building is done via the armory release button in its toolbar.
+Once the prerequisites are done being setup, build is accomplished utilizing the batch script.
 
 ## Design Goals
     * RPG mechanics
@@ -26,7 +20,7 @@ Building is done via the armory release button in its toolbar.
 as always, development is early so all goals are subject to changes.
 
 ## Acknowledgements
-We utilize Armory3d, Kha, and Haxe so leave credit where credit is due.
+We utilize Heaps, Castle, Hide, haxeui, and Haxe so leave credit where credit is due.
 
 ## Versioning
 Releases will be versioned and packed into a zip for convenience each release will be incremental in verison number.
@@ -39,3 +33,19 @@ Currently we are a small team of three developers
 
 ## Contact Us
 You can contact us via email at plorentz7@gmail.com
+
+# resources
+https://github.com/heapsio/hide
+https://github.com/ncannasse/castle
+http://www.haxeui.org/getting-started/haxeui-heaps/
+https://github.com/HeapsIO/heaps
+
+# heaps wiki
+https://heaps.io/documentation/home.html
+https://heaps.io/documentation/hxsl
+https://heaps.io/documentation/hxd
+https://heaps.io/documentation/h3d
+
+# tutorials
+https://github.com/deepnight/gameBase
+https://deepnight.net/tutorial/using-my-gamebase-to-create-a-heaps-game/
