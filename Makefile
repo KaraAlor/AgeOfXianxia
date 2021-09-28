@@ -66,12 +66,8 @@ setup:
 	@sudo apt-get update
 	@sudo apt-get install libglu1-mesa-dev freeglut3-dev mesa-common-dev libsdl2-2.0-0 libsdl2-dev -y
 	@sudo apt-get install haxe -y
-	@mkdir ~/haxelib && haxelib setup ~/haxelib
+	@mkdir -p ~/haxelib && haxelib setup ~/haxelib
 	@sudo apt-get install libpng-dev libturbojpeg-dev libvorbis-dev libopenal-dev libsdl2-dev libmbedtls-dev libuv1-dev -y
-	@git clone https://github.com/HaxeFoundation/hashlink.git ~/hashlink
-	@cd ~/hashlink
-	@make && make install
-	@cp /usr/local/lib/* /usr/lib/ 2>/dev/null || true
 	@haxelib install hashlink
 	@haxelib install hxcpp-debug-server
 	@haxelib install heaps
@@ -93,3 +89,7 @@ setup:
 	@haxelib install vscode-debugadapter
 	@haxelib install hscript
 	@haxelib install redistHelper
+	@git clone https://github.com/HaxeFoundation/hashlink.git ~/hashlink
+	@cd ~/hashlink
+	@sudo make && sudo make install
+	@sudo mv /usr/local/lib/*.hdll /usr/lib/ 2>/dev/null || true
